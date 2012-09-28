@@ -63,9 +63,7 @@ class RoleRouter(object):
             return self.routes["default"]
 
         roles = context.roles
-        logging.error(self.roles)
         for key in self.roles.keys():
             if key in roles:
                 return self.routes[self.roles[key]]
-        raise exc.HTTPUnprocessableEntity("No boots!!!")
         return self.routes["default"]
