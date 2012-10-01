@@ -10,6 +10,7 @@ from webob import exc
 
 from nova.api.openstack import wsgi
 from nova import wsgi as base_wsgi
+from nova.api.openstack.compute import servers
 from nova.openstack.common import jsonutils
 
 
@@ -25,6 +26,7 @@ class RequestNetworks(base_wsgi.Middleware):
         super(RequestNetworks, self).__init__(application)
         self.public_net = local_config.get("public_net", DEFAULT_PUBLIC_NET)
         self.service_net = local_config.get("service_net", DEFAULT_SERVICE_NET)
+        self.xml_deserializer = servers.CreateDeserializer()
 
     def get_servers_from_json(self, req):
         body = jsonutils.loads(req.body)
@@ -35,7 +37,8 @@ class RequestNetworks(base_wsgi.Middleware):
         return servers
 
     def get_servers_from_xml(self, req):
-        server_dict = req.body["server"]
+        body = self.xml_deserializer.default(req.body)
+        server_dict = body["server"]
         servers = []
         if "networks" in server_dict:
             networks = server_dict.get("networks")
