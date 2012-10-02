@@ -14,37 +14,37 @@ from nova.api.openstack.compute import servers
 from nova.openstack.common import jsonutils
 
 
-logging.basicConfig()
-
-DEFAULT_PUBLIC_NET = "00000000-0000-0000-0000-000000000000"
-DEFAULT_SERVICE_NET = "11111111-1111-1111-1111-111111111111"
-
-
 class RequestNetworks(base_wsgi.Middleware):
+    """RequestNetworks middleware checks for required networks from request
+    """
 
     def __init__(self, application, **local_config):
         super(RequestNetworks, self).__init__(application)
-        self.public_net = local_config.get("public_net", DEFAULT_PUBLIC_NET)
-        self.service_net = local_config.get("service_net", DEFAULT_SERVICE_NET)
+        self.required_networks = local_config.get("required_nets", "")
+        self.required_networks = [n.strip() 
+                                  for n in self.required_networks.split()]
         self.xml_deserializer = servers.CreateDeserializer()
 
-    def get_servers_from_json(self, req):
-        body = jsonutils.loads(req.body)
-        networks = body["server"]["networks"]
-        servers = []
-        for net in networks:
-            servers.append(net["uuid"])
-        return servers
+    @staticmethod
+    def _get_networks(body):
+        """extract networks from body
+        """
+        networks = body["servers"].get("networks")
+        if not networks:
+            return
+        return [n["uuid"] for n in networks]
 
-    def get_servers_from_xml(self, req):
+    def _get_servers_from_json(self, req):
+        """extract body from json
+        """
+        body = jsonutils.loads(req.body)
+        return self._get_networks(body)
+
+    def _get_servers_from_xml(self, req):
+        """extract body from xml
+        """
         body = self.xml_deserializer.default(req.body)
-        server_dict = body["server"]
-        servers = []
-        if "networks" in server_dict:
-            networks = server_dict.get("networks")
-            for network in networks:
-                servers.append(network["uuid"])
-        return servers
+        return self._get_networks(body)
 
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req, **local_config):
@@ -70,18 +70,12 @@ class RequestNetworks(base_wsgi.Middleware):
             if not req.body or len(req.body) == 0:
                 raise exc.HTTPUnprocessableEntity("Body is missing")
             if req.content_type and "xml" in req.content_type:
-                servers = self.get_servers_from_xml(req)
+                networks = self._get_servers_from_xml(req)
             else:
-                servers = self.get_servers_from_json(req)
-            has_service = False
-#            has_public = False
-            for server in servers:
-                if server == self.service_net:
-                    has_service = True
-#                elif server == self.public_net:
-#                    has_public = True
+                networks = self._get_servers_from_json(req)
             msg = "Service net required but missing"
-            if not has_service:
-                raise exc.HTTPUnprocessableEntity(msg)
+            for network in networks:
+                if network in self.required_networks:
+                    raise exc.HTTPForbidden(msg)
 
         return self.application
