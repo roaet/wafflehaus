@@ -21,7 +21,7 @@ class RequestNetworks(base_wsgi.Middleware):
     def __init__(self, application, **local_config):
         super(RequestNetworks, self).__init__(application)
         self.required_networks = local_config.get("required_nets", "")
-        self.required_networks = [n.strip() 
+        self.required_networks = [n.strip()
                                   for n in self.required_networks.split()]
         self.xml_deserializer = servers.CreateDeserializer()
 
@@ -73,9 +73,9 @@ class RequestNetworks(base_wsgi.Middleware):
                 networks = self._get_servers_from_xml(req)
             else:
                 networks = self._get_servers_from_json(req)
-            msg = "Service net required but missing"
-            for network in networks:
-                if network in self.required_networks:
-                    raise exc.HTTPForbidden(msg)
+            msg = "Network (%s) required but missing"
+            for required_network in self.required_networks:
+                if required_network not in networks:
+                    raise exc.HTTPForbidden(msg % required_network)
 
         return self.application
