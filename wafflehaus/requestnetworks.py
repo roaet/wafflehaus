@@ -74,8 +74,9 @@ class RequestNetworks(base_wsgi.Middleware):
             else:
                 networks = self._get_servers_from_json(req)
             msg = "Network (%s) required but missing"
-            for required_network in self.required_networks:
-                if required_network not in networks:
-                    raise exc.HTTPForbidden(msg % required_network)
+            if networks:
+                for required_network in self.required_networks:
+                    if required_network not in networks:
+                        raise exc.HTTPForbidden(msg % required_network)
 
         return self.application
