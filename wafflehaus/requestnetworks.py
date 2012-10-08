@@ -29,7 +29,7 @@ class RequestNetworks(base_wsgi.Middleware):
     def _get_networks(body):
         """extract networks from body
         """
-        networks = body["servers"].get("networks")
+        networks = body["server"].get("networks")
         if not networks:
             return
         return [n["uuid"] for n in networks]
