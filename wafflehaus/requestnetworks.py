@@ -66,7 +66,8 @@ class RequestNetworks(base_wsgi.Middleware):
         pathparts = set(pathparts)
         bootcheck = set(["POST", projectid, "servers"])
 
-        if len(pathparts.intersection(bootcheck)) == len(bootcheck):
+        if (len(pathparts) == len(bootcheck) and
+            len(pathparts.intersection(bootcheck)) == len(bootcheck)):
             if not req.body or len(req.body) == 0:
                 raise exc.HTTPUnprocessableEntity("Body is missing")
             if req.content_type and "xml" in req.content_type:
