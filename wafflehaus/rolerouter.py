@@ -6,15 +6,17 @@ Created September 28, 2012
 import logging
 
 import webob.dec
-from webob import exc
 
 from nova.api.openstack import wsgi
 
 
-logging.basicConfig()
+# NOTE(jkoelker) Make sure to log into the nova logger
+log = logging.getLogger('nova.' + __name__)
+
 
 def rolerouter_factory(loader, global_conf, **local_conf):
     return RoleRouter.factory(loader, global_conf, **local_conf)
+
 
 class RoleRouter(object):
     """The purpose of this class is to route filters based on the role
@@ -22,7 +24,7 @@ class RoleRouter(object):
     """
 
     def __init__(self, routeinfo):
-        self.routes = routeinfo["routes"] 
+        self.routes = routeinfo["routes"]
         self.roles = routeinfo["roles"]
 
     @classmethod
@@ -59,7 +61,7 @@ class RoleRouter(object):
         context = req.environ.get("nova.context")
 
         if not context:
-            logging.info("No context found")
+            log.info("No context found")
             return self.routes["default"]
 
         roles = context.roles

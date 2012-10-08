@@ -14,6 +14,10 @@ from nova.api.openstack.compute import servers
 from nova.openstack.common import jsonutils
 
 
+# NOTE(jkoelker) Make sure to log into the nova logger
+log = logging.getLogger('nova.' + __name__)
+
+
 class RequestNetworks(base_wsgi.Middleware):
     """RequestNetworks middleware checks for required networks from request
     """
@@ -52,7 +56,7 @@ class RequestNetworks(base_wsgi.Middleware):
         context = req.environ.get("nova.context")
 
         if not context:
-            logging.info("No context found")
+            log.info("No context found")
             return self.application
 
         projectid = context.project_id
@@ -61,7 +65,7 @@ class RequestNetworks(base_wsgi.Middleware):
         if path is None:
             raise exc.HTTPUnprocessableEntity("Path is missing")
 
-        pathparts = path.split("/")
+        pathparts = [part for part in path.split("/") if part]
         pathparts.insert(0, verb)
         pathparts = set(pathparts)
         bootcheck = set(["POST", projectid, "servers"])
