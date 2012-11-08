@@ -33,7 +33,7 @@ class RequestNetworks(base_wsgi.Middleware):
     def _get_networks(body):
         """extract networks from body
         """
-        networks = body["server"].get("networks")
+        networks = body.get("networks")
         if not networks:
             return
         return [n["uuid"] for n in networks]
@@ -42,7 +42,7 @@ class RequestNetworks(base_wsgi.Middleware):
         """extract body from json
         """
         body = jsonutils.loads(req.body)
-        return self._get_networks(body)
+        return self._get_networks(body["server"])
 
     def _get_servers_from_xml(self, req):
         """extract body from xml
