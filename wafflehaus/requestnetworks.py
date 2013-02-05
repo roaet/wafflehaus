@@ -27,6 +27,9 @@ class RequestNetworks(base_wsgi.Middleware):
         self.required_networks = local_config.get("required_nets", "")
         self.required_networks = [n.strip()
                                   for n in self.required_networks.split()]
+        self.banned_networks = local_config.get("banned_nets", "")
+        self.banned_networks = [n.strip()
+                                for n in self.banned_networks.split()]
         self.xml_deserializer = servers.CreateDeserializer()
 
     @staticmethod
@@ -71,18 +74,26 @@ class RequestNetworks(base_wsgi.Middleware):
         bootcheck = set(["POST", projectid, "servers"])
 
         if (len(pathparts) == len(bootcheck) and
-            len(pathparts.intersection(bootcheck)) == len(bootcheck)):
+                len(pathparts.intersection(bootcheck)) == len(bootcheck)):
             if not req.body or len(req.body) == 0:
                 raise exc.HTTPUnprocessableEntity("Body is missing")
             if req.content_type and "xml" in req.content_type:
                 networks = self._get_servers_from_xml(req)
             else:
                 networks = self._get_servers_from_json(req)
+            # Required Networks
             msg = "Networks (%s) required but missing"
             if networks:
                 network_list = ",".join(self.required_networks)
                 for required_network in self.required_networks:
                     if required_network not in networks:
+                        raise exc.HTTPForbidden(msg % network_list)
+            # Banned (blacklist) Networks
+            msg = "Networks (%s) banned and present"
+            if networks:
+                network_list = ",".join(self.banned_networks)
+                for banned_network in self.banned_networks:
+                    if banned_network in networks:
                         raise exc.HTTPForbidden(msg % network_list)
 
         return self.application
