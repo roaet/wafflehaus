@@ -63,7 +63,7 @@ Request Networks Configuration and Definitions
     Network
         a UUID of a network that is required to be present or missing in the body of a "create server" request
 
- The following sample paste.ini will be used during the explanation of configuration (line-numbers on the left for clarity):
+The following sample paste.ini will be used during the explanation of configuration (line-numbers on the left for clarity):
 
 Request Networks consumption::
 
