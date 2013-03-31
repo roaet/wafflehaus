@@ -59,7 +59,6 @@ The Request Networks middleware will analyze the body of a "create server" reque
 
 Request Networks Configuration and Definitions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     Network
         a UUID of a network that is required to be present or missing in the body of a "create server" request
 
