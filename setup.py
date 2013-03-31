@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import sys, os
 
 version = '0.1'
 
@@ -12,7 +11,7 @@ setup(name='wafflehaus',
       keywords='',
       author='Justin Hammond',
       author_email='justin.hammond@rackspace.com',
-      url='https://github.rackspace.com/O3eng/wafflehaus',
+      url='https://github.com/roaet/wafflehaus',
       license='',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
