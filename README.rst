@@ -19,8 +19,11 @@ The Role Router middleware analyzes the role in the keystone context. Because of
 
 Role Router Configuration and Definitions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Route: a WSGI stack that the role router will select that is a list of filters followed by an app
-Roles: a role value that is expected to be produced by the keystone context middleware. It is important that roles between routes are mutually exclusive, stack selection of overlaping roles is indeterminate, it is determined by the order roles are added to the paste config (ie, don't try to have overlapping roles/routes, it may or may not work depending on how its configured).
+    Route
+        a WSGI stack that the role router will select that is a list of filters followed by an app
+    Roles
+        a role value that is expected to be produced by the keystone context middleware. It is important that roles between routes are mutually exclusive, stack selection of overlaping roles is indeterminate, it is determined by the order roles are added to the paste config (ie, don't try to have overlapping roles/routes, it may or may not work depending on how its configured).
+
 The following sample paste.ini, created to support routing to different pipelines based on if a customer is of a particular role, will be used during the explanation of configuration (line-numbers on the left for clarity):
 
 Role Router consumption::
@@ -57,7 +60,9 @@ The Request Networks middleware will analyze the body of a "create server" reque
 Request Networks Configuration and Definitions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Network: a UUID of a network that is required to be present or missing in the body of a "create server" request
+    Network
+        a UUID of a network that is required to be present or missing in the body of a "create server" request
+
  The following sample paste.ini will be used during the explanation of configuration (line-numbers on the left for clarity):
 
 Request Networks consumption::
