@@ -50,13 +50,15 @@ Role Router setup:
 7  route_managed = requestnetworks osapi_compute_app_v2
 8  # DEFAULT PIPELINE:
 9  route_default = osapi_compute_app_v2
+</pre>
+<p>
 The section header on line 1 is required by paste and defines the label that will be used when referencing the Role Router middleware.
 The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.
 The routes setting on line 4 is required and will describe the variety of routes that the role router is concerned with. It is important that the default route not be included in this descriptive list. The spelling and capitalization of these labels are important (pro-tip: keep it lowercase). This setting is required even if it is empty (pro-tip: if it is empty you shouldn't be using role router)
 The roles_managed setting on line 6 is peculiar as the "roles_" portion is required and standard but the "managed" portion must be exactly the same as a route described above. This particular setting describes the roles, simple strings, expected for the managed route. If any of the roles listed here are detected in the keystone context the router will select the corresponding route_ pipeline, in this case route_managed
 The route_managed setting on line 7 is similar to the line described above (line 6). What is expected here is a list of filters followed by an app. It is possible that the app be another composite, and even another role router.
 The route_default on line 9 is the pipeline selected by the role router if none of the roles were matched. This setting is required
-</pre>
+</p>
 <h2>
 Request Networks
 </h2>
@@ -87,8 +89,11 @@ Request Networks setup:
 4                  11111111-1111-1111-1111-111111111111
 5  banned_nets = 22222222-2222-2222-2222-222222222222
 6                33333333-3333-3333-3333-333333333333
+ </pre>
+<p>
+
 The section header on line 1 is required by paste and defines the label that will be used when referencing the Request Networks middleware.
 The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.
 The required_nets settings on lines 3 and 4 is a list of required UUIDs to look for
 The banned_nets settings on lines 5 and 6 is a list of required UUIDs to block
- </pre>
+</p>
