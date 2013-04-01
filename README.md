@@ -5,7 +5,7 @@ Wafflehaus is a collection of WSGI middleware for nova that intends on adding fu
 
 <h2>Purpose:</h2>
 <p>
-Wafflehaus was created to support the specialized requirement that the service-net must be listed as a requested network during a 'create server' event if and only if the tenant in question is a managed or rack-connect customer. Multiple solutions were suggested but the middleware approach was selected due to low impact to code and the increased flexibility provided by adding logic to the WSGI path (implemented through Role Router).
+Wafflehaus was created to support the specialized requirement that a certain network must be listed as a requested network during a 'create server' event if and only if the tenant in question is of a particular role. Multiple solutions were suggested but the middleware approach was selected due to low impact to code and the increased flexibility provided by adding logic to the WSGI path (implemented through Role Router).
 </p>
 
 <h2>Middleware Included with Wafflehaus</h2>
@@ -24,7 +24,7 @@ Roles: a role value that is expected to be produced by the keystone context midd
 </li>
 </ul>
 <p>
-The following sample paste.ini, created to support routing to different pipelines based on if a customer is managed or rack-connect, will be used during the explanation of configuration (line-numbers on the left for clarity):
+The following sample paste.ini, created to support routing to different pipelines based on if a customer is of a particular role, will be used during the explanation of configuration (line-numbers on the left for clarity):
 </p>
 <h3>
 Role Router consumption:
@@ -46,7 +46,7 @@ Role Router setup:
 3  # LIST PIPELINES TO ROUTE
 4  routes = managed
 5  # ROLES AND ROUTES FOR MANAGED PIPELINE
-6  roles_managed = rax_managed rack_connect
+6  roles_managed = role1 role2
 7  route_managed = requestnetworks osapi_compute_app_v2
 8  # DEFAULT PIPELINE:
 9  route_default = osapi_compute_app_v2
@@ -92,8 +92,9 @@ Request Networks setup:
  </pre>
 <p>
 
-The section header on line 1 is required by paste and defines the label that will be used when referencing the Request Networks middleware.
-The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.
-The required_nets settings on lines 3 and 4 is a list of required UUIDs to look for
-The banned_nets settings on lines 5 and 6 is a list of required UUIDs to block
+The section header on line 1 is required by paste and defines the label that will be used when referencing the Request Networks middleware.<br/>
+The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.<br/>
+The required_nets settings on lines 3 and 4 is a list of required UUIDs to look for<br/>
+The banned_nets settings on lines 5 and 6 is a list of required UUIDs to block<br/>
+The UUIDs are just examples.<br/>
 </p>
