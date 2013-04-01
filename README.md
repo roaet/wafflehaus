@@ -52,12 +52,12 @@ Role Router setup:
 9  route_default = osapi_compute_app_v2
 </pre>
 <p>
-The section header on line 1 is required by paste and defines the label that will be used when referencing the Role Router middleware.
-The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.
-The routes setting on line 4 is required and will describe the variety of routes that the role router is concerned with. It is important that the default route not be included in this descriptive list. The spelling and capitalization of these labels are important (pro-tip: keep it lowercase). This setting is required even if it is empty (pro-tip: if it is empty you shouldn't be using role router)
-The roles_managed setting on line 6 is peculiar as the "roles_" portion is required and standard but the "managed" portion must be exactly the same as a route described above. This particular setting describes the roles, simple strings, expected for the managed route. If any of the roles listed here are detected in the keystone context the router will select the corresponding route_ pipeline, in this case route_managed
-The route_managed setting on line 7 is similar to the line described above (line 6). What is expected here is a list of filters followed by an app. It is possible that the app be another composite, and even another role router.
-The route_default on line 9 is the pipeline selected by the role router if none of the roles were matched. This setting is required
+The section header on line 1 is required by paste and defines the label that will be used when referencing the Role Router middleware.<br/>
+The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.<br/>
+The routes setting on line 4 is required and will describe the variety of routes that the role router is concerned with. It is important that the default route not be included in this descriptive list. The spelling and capitalization of these labels are important (pro-tip: keep it lowercase). This setting is required even if it is empty (pro-tip: if it is empty you shouldn't be using role router)<br/>
+The roles_managed setting on line 6 is peculiar as the "roles_" portion is required and standard but the "managed" portion must be exactly the same as a route described above. This particular setting describes the roles, simple strings, expected for the managed route. If any of the roles listed here are detected in the keystone context the router will select the corresponding route_ pipeline, in this case route_managed<br/>
+The route_managed setting on line 7 is similar to the line described above (line 6). What is expected here is a list of filters followed by an app. It is possible that the app be another composite, and even another role router.<br/>
+The route_default on line 9 is the pipeline selected by the role router if none of the roles were matched. This setting is required<br/>
 </p>
 <h2>
 Request Networks
