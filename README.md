@@ -91,10 +91,11 @@ Request Networks setup:
 6                33333333-3333-3333-3333-333333333333
  </pre>
 <p>
+<ul><li>The section header on line 1 is required by paste and defines the label that will be used when referencing the Request Networks middleware.<br/>
+</li><li>The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.<br/>
+</li><li>The required_nets settings on lines 3 and 4 is a list of required UUIDs to look for<br/>
+</li><li>The banned_nets settings on lines 5 and 6 is a list of required UUIDs to block<br/>
+</li><li>The UUIDs are just examples.
+</li></ul>
 
-The section header on line 1 is required by paste and defines the label that will be used when referencing the Request Networks middleware.<br/>
-The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.<br/>
-The required_nets settings on lines 3 and 4 is a list of required UUIDs to look for<br/>
-The banned_nets settings on lines 5 and 6 is a list of required UUIDs to block<br/>
-The UUIDs are just examples.<br/>
 </p>
