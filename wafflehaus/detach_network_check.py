@@ -25,7 +25,6 @@ from nova.compute import utils as compute_utils
 from nova.openstack.common import uuidutils
 
 
-# NOTE(jkoelker) Make sure to log into the nova logger
 log = logging.getLogger('nova.' + __name__)
 
 
