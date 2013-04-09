@@ -51,7 +51,7 @@ class DetachNetworkCheck(base_wsgi.Middleware):
         self.xml_deserializer = servers.CreateDeserializer()
 
     def _get_network_info(self, req, server_id, entity_maker):
-        """Returns a list of VIGs, transformed through entity_maker"""
+        """Returns a list of VIFs, transformed through entity_maker"""
         context = req.environ['nova.context']
 
         instance = self.compute_api.get(context, server_id)
