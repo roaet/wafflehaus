@@ -82,3 +82,29 @@ Request Networks setup::
 * The required_nets settings on lines 3 and 4 is a list of required UUIDs to look for
 * The banned_nets settings on lines 5 and 6 is a list of required UUIDs to block
 * The UUIDs are just examples.
+
+Detach Network Check
+----------------
+
+The Detach Network Check middleware will ensure that the VIF being removed from an instance is not the interface that is attached to a particular network. This check is a little more complicated than just ensuring that a 'network' is present because the relationship between a VIF and a particular network is not immediately available. A request to a different service is necessary to look up the network information on the VIF.
+
+Detach Network Check Configuration and Definitions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Network
+        a UUID of a network that is required and cannot be detached
+
+The following sample paste.ini will be used during the explanation of configuration (line-numbers on the left for clarity):
+
+Detach Network Check consumption::
+
+    1  route_managed = detachcheck osapi_compute_app_v2
+
+Detach Network Check setup::
+
+    1  [filter:detachcheck]
+    2  paste.filter_factory = wafflehaus.detach_network_check:DetachNetworkCheck.factory
+    3  required_nets = 11111111-1111-1111-1111-111111111111
+
+* The section header on line 1 is required by paste and defines the label that will be used when referencing the Request Networks middleware.
+* The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.
+* The required_nets settings on lines 3 is the UUID of the network that cannot be detached
