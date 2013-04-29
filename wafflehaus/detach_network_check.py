@@ -108,7 +108,7 @@ class DetachNetworkCheck(base_wsgi.Middleware):
         for vif in network_info["virtual_interfaces"]:
             if vif['id'] == vif_uuid:
                 ip_info = vif['ip_addresses']
-                network_id = ip_info['network']['id']
+                network_id = ip_info[0]['network_id']
                 if network_id in self.required_networks:
                     raise exc.HTTPForbidden(msg % network_list)
 
