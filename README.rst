@@ -110,7 +110,7 @@ Detach Network Check setup::
 * The required_nets settings on lines 3 is the UUID of the network that cannot be detached
 
 Having the same middleware listed multiple times
-------------------------------------------------
+================================================
 It is possible to have a two different routes that require the same middleware but with different configurations.
 
 The example paste.ini for this is::
