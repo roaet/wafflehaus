@@ -110,6 +110,7 @@ class DetachNetworkCheck(base_wsgi.Middleware):
                 ip_info = vif['ip_addresses']
                 network_id = ip_info[0]['network_id']
                 if network_id in self.required_networks:
+                    log.info("waffle - attempt to detach required network")
                     raise exc.HTTPForbidden(msg % network_list)
 
         return self.application
