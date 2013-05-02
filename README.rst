@@ -84,7 +84,7 @@ Request Networks setup::
 * The UUIDs are just examples.
 
 Detach Network Check
-----------------
+--------------------
 
 The Detach Network Check middleware will ensure that the VIF being removed from an instance is not the interface that is attached to a particular network. This check is a little more complicated than just ensuring that a 'network' is present because the relationship between a VIF and a particular network is not immediately available. A request to a different service is necessary to look up the network information on the VIF.
 
@@ -108,3 +108,31 @@ Detach Network Check setup::
 * The section header on line 1 is required by paste and defines the label that will be used when referencing the Request Networks middleware.
 * The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.
 * The required_nets settings on lines 3 is the UUID of the network that cannot be detached
+
+Having the same middleware listed multiple times
+------------------------------------------------
+It is possible to have a two different routes that require the same middleware but with different configurations.
+
+The example paste.ini for this is::
+
+    1  [composite:rolerouter]
+    2  use = call:wafflehaus.rolerouter:rolerouter_factory
+    3  # LIST PIPELINES TO ROUTE
+    4  routes = managed special
+    5  # ROLES AND ROUTES FOR MANAGED PIPELINE
+    6  roles_managed = role1 role2
+    7  route_managed = requestnetworks osapi_compute_app_v2
+    8  roles_special = specialrole
+    9  route_special = requestnetworks_special osapi_compute_app_v2
+    10 # DEFAULT PIPELINE:
+    11 route_default = osapi_compute_app_v2
+    12 [filter:requestnetworks]
+    13 paste.filter_factory = wafflehaus.requestnetworks:RequestNetworks.factory
+    14 required_nets = 00000000-0000-0000-0000-000000000000
+    15
+    16 [filter:requestnetworks_special]
+    17 paste.filter_factory = wafflehaus.requestnetworks:RequestNetworks.factory
+    18 required_nets = 11111111-1111-1111-1111-111111111111
+    19 banned_nets = 22222222-2222-2222-2222-222222222222
+
+Note that the two requestnetworks targets have the same paste.filter_factory, but different parameters.
