@@ -109,6 +109,46 @@ Detach Network Check setup::
 * The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.
 * The required_nets settings on lines 3 is the UUID of the network that cannot be detached
 
+Network Count Check
+-------------------
+
+The Network Count Check middleware verifies only a certain number of networks are allowed to attach to a server. The middleware enforces this both from the body of a "create server" request to nova (POST) as well as a VIF attach request to nova (POST). This middleware will not execute for any other request. It also supports optional, required and banned network functionality and the ability to include/exclude optional networks from the count. A minimum and maximum network count can be configured to ensure the number of isolated networks being attached is within a given range, or min and max can be set to the same value to ensure a specific number of attached networks. Similar to the Request Networks functionality, if a network UUID that is listed in the required_nets configuration (in the paste.ini) is missing from the request body this middleware will raise an HTTP Forbidden error. In addition to being able to find required networks, the Network Count Check middleware can locate blacklisted networks and will raise an HTTP Forbidden error if the networks are present in the request.
+
+Network Count Check Configuration and Definitions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Network
+        a UUID of a network that is required to be present or missing in the body of a "create server" request or a network attach request
+
+The following sample paste.ini will be used during the explanation of configuration (line-numbers on the left for clarity):
+
+Network Count Check consumption::
+
+    1  route_managed = network_count_check osapi_compute_app_v2
+
+Network Count Check setup::
+
+    1  [filter:network_count_check]
+    2  paste.filter_factory = wafflehaus.network_count_check:NetworkCountCheck.factory
+    3  optional_nets = 00000000-0000-0000-0000-000000000000
+    4                  11111111-1111-1111-1111-111111111111
+    5  required_nets = 22222222-2222-2222-2222-222222222222
+    6                  33333333-3333-3333-3333-333333333333
+    7  banned_nets = 44444444-4444-4444-4444-444444444444
+    8                55555555-5555-5555-5555-555555555555
+    9  networks_min  = 1
+    10 networks_max  = 5
+    11 count_optional_nets = False
+
+* The section header on line 1 is required by paste and defines the label that will be used when referencing the Network Count Check middleware.
+* The use setting on line 2 will select the package and function to use when the WSGI stack reaches this point. This line is required by paste.
+* The optional_nets settings on lines 3 and 4 is a list of required UUIDs to look for. Optional setting, defaults to none.
+* The required_nets settings on lines 5 and 6 is a list of required UUIDs to look for. Optional setting, defaults to none.
+* The banned_nets settings on lines 7 and 8 is a list of required UUIDs to block. Optional setting, defaults to none.
+* The UUIDs are just examples.
+* The networks_min is the minimum number of isolated networks a server must have, enforced on server boot and VIF attach requests. Defaults to 1.
+* The networks_max is the maximum number of isolated networks a server must have, enforced on server boot and VIF attach requests. Defaults to 1.
+* The count_optional_nets indicates whether or not to include optional networks in the network count. For example, if you have network X as optional and have a maximum of 1 isolated network configured, a request with two networks would pass if one of them was network X (and count_optional_nets was set to False). Optional setting, defaults to False. 
+
 Having the same middleware listed multiple times
 ================================================
 It is possible to have a two different routes that require the same middleware but with different configurations.
