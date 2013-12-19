@@ -35,7 +35,7 @@ except ImportError:
         except ImportError:
             pass
 if not CONF:
-    raise ImportError()
+    raise ImportError("Could not import webob")
 
 
 CONF_OPTS = [
