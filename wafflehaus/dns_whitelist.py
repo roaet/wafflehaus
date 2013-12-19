@@ -1,16 +1,30 @@
+# Copyright 2013 Openstack Foundation
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+"""This middleware is intended to be used with paste.deploy"""
 import logging
 
 import dns.exception
 import dns.resolver
 import dns.reversename
 
-log = logging.getLogger('neutron.' + __name__)
 
 CONF = None
-for app in 'nova', 'glance', 'quantum', 'cinder':
+for _app in 'nova', 'glance', 'quantum', 'cinder':
     try:
-        cfg = __import__('%s.openstack.common.cfg' % app,
-                         fromlist=['%s.openstack.common' % app])
+        cfg = __import__('%s.openstack.common.cfg' % _app,
+                         fromlist=['%s.openstack.common' % _app])
         if hasattr(cfg, 'CONF') and 'config_file' in cfg.CONF:
             CONF = cfg.CONF
             break
@@ -21,7 +35,7 @@ if not CONF:
     CONF = cfg.CONF
 
 
-opts = [
+CONF_OPTS = [
     cfg.StrOpt('whitelist',
                default=[],
                help='List of whitelisted strings to match the end '
@@ -38,12 +52,58 @@ opts = [
                default=None,
                help='The IP of a nameserver address to override OS default'),
 ]
-CONF.register_opts(opts, group='dns_whitelist')
+CONF.register_opts(CONF_OPTS, group='dns_whitelist')
 
 
+def check_reverse_dns(ip_address, a_record_rrset):
+    """Checks to ensure IP is within a set of IPs from an A query set"""
+    match = any(ip_address == str(val) for val in a_record_rrset)
+    return match
+
+
+def check_domain_to_whitelist(domain, whitelist):
+    """Checks to ensure a domain ends with at least one of a whitelisted
+    domain-ending string.
+    """
+    if domain.endswith('.'):
+        domain = domain[:-1]
+    for ok_host in whitelist:
+        if domain.endswith(ok_host):
+            return True
+    return False
+
+
+def response_headers(content_length):
+    """Creates the default headers for all errors"""
+    return [
+        ("Content-type", "text/html"),
+        ("Content-length", str(content_length)),
+    ]
+
+
+def do_403(start_response):
+    """Performs a standard 403 error"""
+    start_response("403 Forbidden",
+                   response_headers(0))
+    return ["",]
+
+
+def do_500(start_response):
+    """Performs a standard 500 error"""
+    start_response("500 Internal Server Error",
+                   response_headers(0))
+    return ["",]
+
+# pylint: disable=R0903
 class DNSWhitelist(object):
+    """DNSWhitelist middleware will DNS lookup REMOTE_ADDR and attempt to
+    match result to a whitelist. A failed match will 403.
+    """
 
     def _conf_get(self, name, default=None):
+        """Will attempt to get config from paste config first, then config of
+        the service this middleware is filtering.
+        """
         if name in self.conf:
             return self.conf.get(name, default)
         else:
@@ -56,8 +116,8 @@ class DNSWhitelist(object):
         logname = "neutron." + __name__
         self.conf = conf
         self.app = app
-        self.LOG = logging.getLogger(conf.get('log_name', logname))
-        self.LOG.info('Starting wafflehaus dns whitelist middleware')
+        self.log = logging.getLogger(conf.get('log_name', logname))
+        self.log.info('Starting wafflehaus dns whitelist middleware')
         self.testing = (self._conf_get('testing') in
                         (True, 'true', 't', '1', 'on', 'yes', 'y'))
         self.negative_testing = (self._conf_get('negative_testing') in
@@ -65,83 +125,62 @@ class DNSWhitelist(object):
         if self.negative_testing:
             self.testing = True
 
-    def _response_headers(self, content_length):
-        response_headers = [
-                ("Content-type", "text/html"),
-                ("Content-length", str(content_length)),
-                ]
-        return response_headers
-
-    def _do_403(self, start_response):
-        start_response("403 Forbidden",
-                       self._response_headers(0))
-        return ["",]
-
-    def _do_500(self, start_response):
-        start_response("500 Internal Server Error",
-                       self._response_headers(0))
-        return ["",]
-
-    def _check_reverse_dns(self, ip, a_record_rrset):
-        match = any(ip == str(val) for val in a_record_rrset)
-        return match
-
-    def _check_domain_to_whitelist(self, domain, whitelist):
-        if domain.endswith('.'):
-            domain = domain[:-1]
-        for ok_host in whitelist:
-            if domain.endswith(ok_host):
-                return True
-        return False
-
     def _create_resolver(self):
-        ns = str(dns.resolver.Resolver().nameservers[0])
-        ns = self._conf_get('nameserver', ns)
+        """Creates the DNS resolver"""
+        nameserver = str(dns.resolver.Resolver().nameservers[0])
+        nameserver = self._conf_get('nameserver', nameserver)
         res = dns.resolver.Resolver(configure=False)
-        res.nameservers = [ns]
+        res.nameservers = [nameserver]
         return res
 
     def _create_whitelist(self, key='whitelist'):
-        whitelist = self._conf_get('whitelist', [])
+        """Creates the whitelist from configuration or testing whitelists"""
+        if self.testing:
+            if self.negative_testing:
+                return ['derp.com']
+            return ['rackspace.com']
+        whitelist = self._conf_get(key, [])
         if isinstance(whitelist, basestring):
             whitelist = whitelist.split(" ")
         return whitelist
 
 
     def __call__(self, env, start_response):
+        """Performs white listing of REMOTE_ADDR and will fail if:
+            - PTR query of REMOTE_ADDR does not end with a whitelisted domain
+            - A query of PTR query fails to match REMOTE_ADDR
+        """
         whitelist = self._create_whitelist()
         if not whitelist:
-            self.LOG.error("Whitelist not set")
-            return self._do_500(start_response)
+            self.log.error("Whitelist not set")
+            return do_500(start_response)
 
         remote_addr = env['REMOTE_ADDR']
-        res = self._create_resolver()
-
         if self.testing:
             remote_addr = "98.129.20.206"
-            whitelist = ['rackspace.com']
-            if self.negative_testing:
-                whitelist = ['derp.com']
+
+        res = self._create_resolver()
+
         try:
             name = dns.reversename.from_address(remote_addr)
             ptr = res.query(name, "PTR")[0]
 
-            if not self._check_domain_to_whitelist(str(ptr), whitelist):
-                self.LOG.warning("DNS whitelist matching failure")
-                return self._do_403(start_response)
+            if not check_domain_to_whitelist(str(ptr), whitelist):
+                self.log.warning("DNS whitelist matching failure")
+                return do_403(start_response)
 
             a_record = res.query(str(ptr), "A")
         except dns.exception.DNSException:
             msg = "Missing DNS entries?"
-            self.LOG.error("DNS Error during query: " + msg)
-            return self._do_500(start_response)
+            self.log.error("DNS Error during query: " + msg)
+            return do_500(start_response)
 
-        if not self._check_reverse_dns(remote_addr, a_record.rrset):
+        if not check_reverse_dns(remote_addr, a_record.rrset):
             if self.testing:
-                self.LOG.warning("Reverse DNS check failed")
+                self.log.warning("Reverse DNS check failed")
             else:
-                self.LOG.warning("Reverse DNS check failed")
-                return self._do_403(start_response)
+                self.log.warning("Reverse DNS check failed")
+                return do_403(start_response)
         return self.app(env, start_response)
 
 
@@ -151,5 +190,6 @@ def filter_factory(global_conf, **local_conf):
     conf.update(local_conf)
 
     def auth_bypass(app):
+        """Returns the app for paste.deploy"""
         return DNSWhitelist(app, conf)
     return auth_bypass
