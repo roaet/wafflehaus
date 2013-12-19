@@ -21,18 +21,21 @@ import dns.reversename
 
 
 CONF = None
-for _app in 'nova', 'glance', 'quantum', 'cinder':
-    try:
-        cfg = __import__('%s.openstack.common.cfg' % _app,
-                         fromlist=['%s.openstack.common' % _app])
-        if hasattr(cfg, 'CONF') and 'config_file' in cfg.CONF:
-            CONF = cfg.CONF
-            break
-    except ImportError:
-        pass
-if not CONF:
+try:
     from oslo.config import cfg
     CONF = cfg.CONF
+except ImportError:
+    for _app in 'nova', 'glance', 'quantum', 'cinder':
+        try:
+            cfg = __import__('%s.openstack.common.cfg' % _app,
+                             fromlist=['%s.openstack.common' % _app])
+            if hasattr(cfg, 'CONF') and 'config_file' in cfg.CONF:
+                CONF = cfg.CONF
+                break
+        except ImportError:
+            pass
+if not CONF:
+    raise ImportError()
 
 
 CONF_OPTS = [
