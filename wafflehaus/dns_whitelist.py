@@ -48,6 +48,9 @@ CONF_OPTS = [
                 default=False,
                 help='Will put the middlware into testing mode where it will '
                      'always fail'),
+    cfg.BoolOpt('testing_remote_addr',
+                default=None,
+                help='The remote addr to use while testing'),
     cfg.StrOpt('nameserver',
                default=None,
                help='The IP of a nameserver address to override OS default'),
@@ -113,9 +116,9 @@ class DNSWhitelist(object):
                 return default
 
     def __init__(self, app, conf):
-        logname = "neutron." + __name__
         self.conf = conf
         self.app = app
+        logname = "wafflehaus." + __name__
         self.log = logging.getLogger(conf.get('log_name', logname))
         self.log.info('Starting wafflehaus dns whitelist middleware')
         self.testing = (self._conf_get('testing') in
@@ -157,7 +160,10 @@ class DNSWhitelist(object):
 
         remote_addr = env['REMOTE_ADDR']
         if self.testing:
-            remote_addr = "98.129.20.206"
+            remote_addr = self._conf_get('testing_remote_addr')
+
+        self.log.debug("DNS check of %s against %s" % (remote_addr,
+                                                       str(whitelist)))
 
         res = self._create_resolver()
 
