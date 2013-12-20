@@ -6,6 +6,14 @@ resolution as a form of authentication. You provide a whitelisted domain list
 and this filter will prevent all requests from continuing in the WSGI pipeline
 that do not meet the requirements.
 
+Tips
+----
+
+If the requesting IP does not have a valid DNS entry it will fail with a
+warning in the logs. For aberrant requests this may cause some worry due to the
+*warning* in the logs. It is highlighted for expected requests that are lacking
+proper DNS settings.
+
 Example Config
 --------------
 
