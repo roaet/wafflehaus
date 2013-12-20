@@ -9,7 +9,7 @@ DNS Whitelist
 
 DNS Whitelist provides a filter for WSGI applications by using namespace
 resolution as a form of authentication. You provide a whitelisted domain list
-and this filter will prevent all requests from continuing in the WSGI pipeline
+and this filter will reject all requests from continuing in the WSGI pipeline
 that do not meet the requirements.
 
 Tips
@@ -48,7 +48,7 @@ filter is working::
 Example Negative Testing Config
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Will never pass the filter through so you can see how your service reacts when
+Will always reject the request so you can see how your service reacts when
 a request is filtered::
 
     [filter:dns_filter]
