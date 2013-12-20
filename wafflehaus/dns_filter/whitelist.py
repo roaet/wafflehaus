@@ -100,6 +100,8 @@ def do_500(start_response):
                    response_headers(0))
     return ["",]
 
+WHITELIST = None
+
 # pylint: disable=R0903
 class DNSWhitelist(object):
     """DNSWhitelist middleware will DNS lookup REMOTE_ADDR and attempt to
@@ -128,6 +130,7 @@ class DNSWhitelist(object):
                         (True, 'true', 't', '1', 'on', 'yes', 'y'))
         self.negative_testing = (self._conf_get('negative_testing') in
                                  (True, 'true', 't', '1', 'on', 'yes', 'y'))
+        self.whitelist = self._create_whitelist()
         if self.negative_testing:
             self.testing = True
 
@@ -156,8 +159,7 @@ class DNSWhitelist(object):
             - PTR query of REMOTE_ADDR does not end with a whitelisted domain
             - A query of PTR query fails to match REMOTE_ADDR
         """
-        whitelist = self._create_whitelist()
-        if not whitelist:
+        if not self.whitelist:
             self.log.error("Whitelist not set")
             return do_500(start_response)
 
@@ -166,7 +168,7 @@ class DNSWhitelist(object):
             remote_addr = self._conf_get('testing_remote_addr')
 
         self.log.debug("DNS check of %s against %s" % (remote_addr,
-                                                       str(whitelist)))
+                                                       str(self.whitelist)))
 
         res = self._create_resolver()
 
@@ -174,7 +176,7 @@ class DNSWhitelist(object):
             name = dns.reversename.from_address(remote_addr)
             ptr = res.query(name, "PTR")[0]
 
-            if not check_domain_to_whitelist(str(ptr), whitelist):
+            if not check_domain_to_whitelist(str(ptr), self.whitelist):
                 self.log.warning("DNS whitelist matching failure")
                 return do_403(start_response)
 
