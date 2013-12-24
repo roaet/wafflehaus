@@ -144,11 +144,12 @@ class DNSWhitelist(object):
 
     def _create_whitelist(self, key='whitelist'):
         """Creates the whitelist from configuration or testing whitelists"""
+        test_list = []
         if self.testing:
             if self.negative_testing:
-                return ['derp.com']
-            return ['rackspace.com']
-        whitelist = self._conf_get(key, [])
+                test_list = ['derp.com']
+            test_list = ['rackspace.com']
+        whitelist = self._conf_get(key, test_list)
         if isinstance(whitelist, basestring):
             whitelist = whitelist.split(" ")
         return whitelist
