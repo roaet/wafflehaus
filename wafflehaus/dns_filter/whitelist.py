@@ -165,7 +165,7 @@ class DNSWhitelist(object):
 
         remote_addr = env['REMOTE_ADDR']
         if self.testing:
-            remote_addr = self._conf_get('testing_remote_addr')
+            remote_addr = self._conf_get('testing_remote_addr', remote_addr)
 
         self.log.debug("DNS check of %s against %s" % (remote_addr,
                                                        str(self.whitelist)))
@@ -184,7 +184,10 @@ class DNSWhitelist(object):
         except dns.exception.DNSException:
             msg = "Missing DNS entries?"
             self.log.error("DNS Error during query: " + msg)
-            return do_500(start_response)
+	    if not self.testing:
+		return do_500(start_response)
+	    else:
+                return self.app(env, start_response)
 
         if not check_reverse_dns(remote_addr, a_record.rrset):
             if self.testing:

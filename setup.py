@@ -21,7 +21,7 @@ version = '0.1'
 setuptools.setup(
     name='wafflehaus',
     version=version,
-    description="A collection of middleware for nova",
+    description="A collection of middleware for openstack",
     classifiers=[
       "Development Status :: 5 - Production/Stable",
       "Environment :: Web Environment",
@@ -34,7 +34,7 @@ setuptools.setup(
       "Programming Language :: Python :: 2.6",
       "Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware"
     ], 
-    keywords=['openstack', 'nova'],
+    keywords=['openstack'],
     author='Justin Hammond',
     author_email='justin.hammond@rackspace.com',
     url='https://github.com/roaet/wafflehaus',
@@ -45,5 +45,6 @@ setuptools.setup(
     install_requires=[
       "webob",
       "nova",
+      "dnspython"
     ],
 )
