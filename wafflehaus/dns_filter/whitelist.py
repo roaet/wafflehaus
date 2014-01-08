@@ -123,7 +123,7 @@ class DNSWhitelist(object):
     def __init__(self, app, conf):
         self.conf = conf
         self.app = app
-        logname = "wafflehaus." + __name__
+        logname = __name__
         self.log = logging.getLogger(conf.get('log_name', logname))
         self.log.info('Starting wafflehaus dns whitelist middleware')
         self.testing = (self._conf_get('testing') in
