@@ -16,7 +16,7 @@
 #    under the License.
 import setuptools
 
-version = '0.1'
+version = '0.2'
 
 setuptools.setup(
     name='wafflehaus',
@@ -39,7 +39,7 @@ setuptools.setup(
     author_email='justin.hammond@rackspace.com',
     url='https://github.com/roaet/wafflehaus',
     license='Apache Software License',
-    packages=['wafflehaus'],
+    packages=setuptools.find_packages(),
     long_description=open('README.rst').read(),
     zip_safe=False,
     install_requires=[
