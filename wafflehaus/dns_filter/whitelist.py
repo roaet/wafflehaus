@@ -12,7 +12,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-"""This middleware is intended to be used with paste.deploy"""
+"""This middleware is intended to be used with paste.deploy."""
 import logging
 
 import dns.exception
@@ -62,7 +62,7 @@ CONF.register_opts(CONF_OPTS, group='dns_whitelist')
 
 
 def check_reverse_dns(ip_address, a_record_rrset):
-    """Checks to ensure IP is within a set of IPs from an A query set"""
+    """Checks to ensure IP is within a set of IPs from an A query set."""
     match = any(ip_address == str(val) for val in a_record_rrset)
     return match
 
@@ -80,7 +80,7 @@ def check_domain_to_whitelist(domain, whitelist):
 
 
 def response_headers(content_length):
-    """Creates the default headers for all errors"""
+    """Creates the default headers for all errors."""
     return [
         ("Content-type", "text/html"),
         ("Content-length", str(content_length)),
@@ -88,19 +88,20 @@ def response_headers(content_length):
 
 
 def do_403(start_response):
-    """Performs a standard 403 error"""
+    """Performs a standard 403 error."""
     start_response("403 Forbidden",
                    response_headers(0))
-    return ["",]
+    return ["", ]
 
 
 def do_500(start_response):
-    """Performs a standard 500 error"""
+    """Performs a standard 500 error."""
     start_response("500 Internal Server Error",
                    response_headers(0))
-    return ["",]
+    return ["", ]
 
 WHITELIST = None
+
 
 # pylint: disable=R0903
 class DNSWhitelist(object):
@@ -135,7 +136,7 @@ class DNSWhitelist(object):
             self.testing = True
 
     def _create_resolver(self):
-        """Creates the DNS resolver"""
+        """Creates the DNS resolver."""
         nameserver = str(dns.resolver.Resolver().nameservers[0])
         nameserver = self._conf_get('nameserver', nameserver)
         res = dns.resolver.Resolver(configure=False)
@@ -143,7 +144,7 @@ class DNSWhitelist(object):
         return res
 
     def _create_whitelist(self, key='whitelist'):
-        """Creates the whitelist from configuration or testing whitelists"""
+        """Creates the whitelist from configuration or testing whitelists."""
         test_list = []
         if self.testing:
             if self.negative_testing:
@@ -153,7 +154,6 @@ class DNSWhitelist(object):
         if isinstance(whitelist, basestring):
             whitelist = whitelist.split(" ")
         return whitelist
-
 
     def __call__(self, env, start_response):
         """Performs white listing of REMOTE_ADDR and will fail if:
@@ -185,10 +185,10 @@ class DNSWhitelist(object):
         except dns.exception.DNSException:
             msg = "Missing DNS entries?"
             self.log.error("DNS Error during query: " + msg)
-	    if not self.testing:
-		return do_500(start_response)
-	    else:
-                return self.app(env, start_response)
+        if not self.testing:
+            return do_500(start_response)
+        else:
+            return self.app(env, start_response)
 
         if not check_reverse_dns(remote_addr, a_record.rrset):
             if self.testing:
@@ -205,6 +205,6 @@ def filter_factory(global_conf, **local_conf):
     conf.update(local_conf)
 
     def auth_bypass(app):
-        """Returns the app for paste.deploy"""
+        """Returns the app for paste.deploy."""
         return DNSWhitelist(app, conf)
     return auth_bypass

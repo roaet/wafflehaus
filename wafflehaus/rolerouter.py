@@ -13,14 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import logging
-
+import webob
 import webob.dec
 
-from nova.api.openstack import wsgi
-
-
-# NOTE(jkoelker) Make sure to log into the nova logger
-log = logging.getLogger('nova.' + __name__)
+log = logging.getLogger(__name__)
 
 
 def rolerouter_factory(loader, global_conf, **local_conf):
@@ -65,7 +61,7 @@ class RoleRouter(object):
                 routeinfo["routes"][route] = app
         return cls(routeinfo)
 
-    @webob.dec.wsgify(RequestClass=wsgi.Request)
+    @webob.dec.wsgify(RequestClass=webob.Request)
     def __call__(self, req):
         context = req.environ.get("nova.context")
 
