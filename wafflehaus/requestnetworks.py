@@ -17,10 +17,10 @@ import logging
 import webob.dec
 from webob import exc
 
-from nova.api.openstack import wsgi
-from nova import wsgi as base_wsgi
 from nova.api.openstack.compute import servers
+from nova.api.openstack import wsgi
 from nova.openstack.common import jsonutils
+from nova import wsgi as base_wsgi
 
 
 # NOTE(jkoelker) Make sure to log into the nova logger
