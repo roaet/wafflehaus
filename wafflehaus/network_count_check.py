@@ -19,19 +19,19 @@ from webob import exc
 
 from nova.api.openstack.compute import servers
 from nova.api.openstack import wsgi
-from nova import wsgi as base_wsgi
 from nova import compute
 from nova.compute import utils as compute_utils
 from nova.openstack.common import jsonutils
 from nova.openstack.common import uuidutils
+from nova import wsgi as base_wsgi
 
 log = logging.getLogger('nova.' + __name__)
 
 
-def _get_body(request, json_property):
+def _get_body(request, json_property, xml_deserializer):
     """Returns body serialized from JSON/XML."""
     if request.content_type and "xml" in request.content_type:
-        body = self.xml_deserializer.default(request.body)
+        body = xml_deserializer.default(request.body)
     else:
         body = jsonutils.loads(request.body)
         body = body[json_property]
@@ -128,7 +128,8 @@ class BootNetworkCountCheck(object):
 
     def _get_networks_from_request(self, req):
         """Returns networks given in server boot request."""
-        networks = self._get_networks(_get_body(req, "server"))
+        networks = self._get_networks(_get_body(req, "server",
+                                                self.xml_deserializer))
 
         if not networks:
             return set()
@@ -152,6 +153,7 @@ class AttachNetworkCountCheck(object):
     def __init__(self, check_config):
         self.check_config = check_config
         self.compute_api = compute.API()
+        self.xml_deserializer = servers.CreateDeserializer()
 
     @staticmethod
     def _is_attach_network_request(pathparts, projectid):
@@ -183,7 +185,7 @@ class AttachNetworkCountCheck(object):
         """Extract network to be added from request."""
         if not request.body or len(request.body) == 0:
             raise exc.HTTPUnprocessableEntity("Body is missing")
-        body = _get_body(request, "virtual_interface")
+        body = _get_body(request, "virtual_interface", self.xml_deserializer)
         if body and body['network_id']:
             return body['network_id']
         return ''

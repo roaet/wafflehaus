@@ -113,7 +113,7 @@ class TestRoleRouter(test_base.TestBase):
         result = rr(req)
         self.assertEqual(result, "cat_filter")
 
-    def test_multiple_roles_from_different_routes_uses_first_role(self):
+    def test_multiple_roles_from_different_routes_is_random(self):
         context = mock.Mock()
         context.roles = ["domestic", "mutt"]
 
@@ -123,7 +123,7 @@ class TestRoleRouter(test_base.TestBase):
         rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
                                            **self.local_conf)
         result = rr(req)
-        self.assertEqual(result, "cat_filter")
+        self.assertTrue(result in ["cat_filter", "dog_filter"])
 
     def test_multiple_roles_from_different_routes_in_different_order(self):
         """Should use first route apps and filters for route listed in
