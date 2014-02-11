@@ -27,7 +27,6 @@ class NeutronEmulatedKeystoneContext(wsgi.Middleware):
 
     @webob.dec.wsgify
     def __call__(self, req):
-        LOG.debug("Waffling")
-        LOG.debug(str(req.headers.items()))
-        LOG.debug(str(req.body))
+        LOG.debug("HEADERS" + str(req.headers.items()))
+        LOG.debug("BODY" + str(req.body))
         return self.application
