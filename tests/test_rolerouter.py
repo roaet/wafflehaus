@@ -14,7 +14,7 @@
 #    under the License.
 import mock
 from wafflehaus import rolerouter
-from wafflehaus.tests import test_base
+from tests import test_base
 
 
 class TestRoleRouter(test_base.TestBase):
@@ -138,4 +138,4 @@ class TestRoleRouter(test_base.TestBase):
         rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
                                            **self.local_conf)
         result = rr(req)
-        self.assertEqual(result, "cat_filter")
+        self.assertTrue(result in ["cat_filter", "dog_filter"])

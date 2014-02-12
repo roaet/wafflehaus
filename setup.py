@@ -39,10 +39,11 @@ setuptools.setup(
     author_email='justin.hammond@rackspace.com',
     url='https://github.com/roaet/wafflehaus',
     license='Apache Software License',
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=['tests']),
     long_description=open('README.rst').read(),
     zip_safe=False,
     install_requires=[
       "webob",
     ],
+    namespace_packages=['wafflehaus'],
 )
