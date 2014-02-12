@@ -8,3 +8,4 @@ flake8==2.0
 nose
 unittest2
 hacking
+git+https://github.com/openstack/neutron.git

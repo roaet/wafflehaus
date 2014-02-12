@@ -1,3 +1,2 @@
 dnspython
 webob
-git+https://git@github.com/openstack/nova.git
