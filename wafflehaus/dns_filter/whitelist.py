@@ -19,13 +19,14 @@ import dns.exception
 import dns.resolver
 import dns.reversename
 
+from oslo.config import cfg
 
-CONF = None
-try:
-    from oslo.config import cfg
-    CONF = cfg.CONF
-except ImportError:
-    for _app in 'nova', 'glance', 'quantum', 'cinder':
+
+CONF = cfg.CONF
+
+
+if CONF is None:
+    for _app in 'nova', 'glance', 'quantum', 'cinder', 'neutron':
         try:
             cfg = __import__('%s.openstack.common.cfg' % _app,
                              fromlist=['%s.openstack.common' % _app])
@@ -34,8 +35,8 @@ except ImportError:
                 break
         except ImportError:
             pass
-if not CONF:
-    raise ImportError("Could not import webob")
+if CONF is None:
+    raise ImportError("Could not import oslo.config")
 
 
 CONF_OPTS = [

@@ -13,10 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 import webob.dec
 import webob.exc
 
-from neutron import auth
+from neutron import context
 
 
 class ContextFilter(object):
@@ -24,6 +26,12 @@ class ContextFilter(object):
     def __init__(self, app, conf):
         self.app = app
         self.conf = conf
+        logname = __name__
+        self.log = logging.getLogger(conf.get('log_name', logname))
+        self.log.info('Starting wafflehaus context middleware')
+        self.user_id = conf.get('user_id')
+        self.testing = (conf.get('testing') in
+                        (True, 'true', 't', '1', 'on', 'yes', 'y'))
 
     def _import_class(self, name):
         last_dot = name.rfind(".")
@@ -33,7 +41,7 @@ class ContextFilter(object):
 
     def _create_context(self, req):
         return self.app
-
+    
     @webob.dec.wsgify
     def __call__(self, req):
         return self._create_context(req)
@@ -53,8 +61,9 @@ class NeutronContextFilter(ContextFilter):
 
     def _create_context(self, req):
         #NOTE(roaet): probably need to vet the req to this thing; headers?
-        keystone_middleware = auth.NeutronKeystoneContext(self.app)
-        return keystone_middleware(req)
+        if not self.testing:
+            req.environ['neutron.context'] = context.get_admin_context()
+        return self.app
 
 
 def filter_factory(global_conf, **local_conf):
