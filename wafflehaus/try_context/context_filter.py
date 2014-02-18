@@ -60,10 +60,14 @@ class NeutronContextFilter(ContextFilter):
         super(NeutronContextFilter, self).__init__(app, conf)
 
     def _process_roles(self, roles):
+        if not self.context.roles:
+            self.context.roles = []
         if roles is None:
-            roles = ''
+            return
         roles = [r.strip() for r in roles.split(',')]
-        self.context.roles = roles
+        for role in roles:
+            if role not in self.context.roles:
+                self.context.roles.append(role)
 
     def _create_context(self, req):
         if not self.testing:
