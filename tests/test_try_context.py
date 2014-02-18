@@ -166,3 +166,27 @@ class TestTryContext(test_base.TestBase):
         self.assertTrue(hasattr(result.context, 'roles'))
         self.assertTrue('testrole' in result.context.roles)
         self.assertTrue('testrole2' in result.context.roles)
+
+    def test_create_strategy_neutron_appends_to_admin_role(self):
+        """Attempt to create the neutron strategy if it is installed. This
+        will probably never run inside of tox because test-requirements are
+        weird."""
+        if not CTX:
+            self.skipTest("Neutron not installed. ")
+        result = context_filter.filter_factory(self.strat_neutron)(self.app)
+        self.assertIsNotNone(result)
+        self.assertTrue(isinstance(result,
+                                   context_filter.NeutronContextFilter))
+        self.assertFalse('neutron.context' in self.req)
+        headers = {'Content-Type': 'application/json',
+                   'X_ROLES': 'testrole, testrole2', }
+        resp = result.__call__.request('/', method='HEAD', headers=headers)
+        self.assertEqual(self.app, resp)
+        self.assertIsNotNone(result.context)
+        self.assertTrue(hasattr(result.context, 'roles'))
+        self.assertTrue('testrole' in result.context.roles)
+        self.assertTrue('testrole2' in result.context.roles)
+        set_a = set(['testrole', 'testrole2'])
+        set_b = set(result.context.roles)
+        set_result = set_b - set_a
+        self.assertTrue(set_a not in set_result)
