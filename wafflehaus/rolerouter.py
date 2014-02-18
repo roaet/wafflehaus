@@ -1,5 +1,4 @@
-# Copyright 2013 Openstack Foundation
-# All Rights Reserved.
+# Copyright 2013 Openstack Foundation # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -28,9 +27,12 @@ class RoleRouter(object):
     obtained from keystone.context
     """
 
-    def __init__(self, routeinfo):
+    def __init__(self, routeinfo, context_key=None):
         self.routes = routeinfo["routes"]
         self.roles = routeinfo["roles"]
+        self.context_key = context_key
+        if self.context_key is None:
+            self.context_key = 'nova.context'
 
     @classmethod
     def factory(cls, loader, global_conf, **local_conf):
@@ -59,11 +61,12 @@ class RoleRouter(object):
                 for filter in filters:
                     app = filter(app)
                 routeinfo["routes"][route] = app
-        return cls(routeinfo)
+        context_key = local_conf.get('context_key')
+        return cls(routeinfo, context_key)
 
     @webob.dec.wsgify(RequestClass=webob.Request)
     def __call__(self, req):
-        context = req.environ.get("nova.context")
+        context = req.environ.get(self.context_key)
 
         if not context:
             log.info("No context found")
