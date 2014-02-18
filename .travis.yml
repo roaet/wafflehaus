@@ -7,4 +7,4 @@ install:
 before_script:
   - "flake8 --show-source --builtins=_ wafflehaus"
 script:
-  - nosetests --with-coverage --cover-package=quark --cover-erase --cover-html --cover-html-dir=.cover-report --cover-min-percentage=90
+  - nosetests --with-coverage --cover-package=quark --cover-erase --cover-html --cover-html-dir=.cover-report --cover-min-percentage=10
