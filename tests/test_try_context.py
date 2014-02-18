@@ -16,6 +16,13 @@ import mock
 from wafflehaus.try_context import context_filter
 from tests import test_base
 
+CTX = None
+try:
+    from neutron import context
+    CTX = context
+except ImportError as e:
+    pass
+
 
 class TestContextClass(object):
     pass
@@ -56,11 +63,8 @@ class TestTryContext(test_base.TestBase):
         """Attempt to create the neutron strategy if it is installed. This
         will probably never run inside of tox because test-requirements are
         weird."""
-        try:
-            from neutron import context
-            context
-        except ImportError as e:
-            self.skipTest("Neutron not installed. " + str(e))
+        if not CTX:
+            self.skipTest("Neutron not installed. ")
         result = context_filter.filter_factory(self.strat_neutron)(self.app)
         self.assertIsNotNone(result)
         self.assertTrue(isinstance(result,
@@ -70,17 +74,14 @@ class TestTryContext(test_base.TestBase):
                    'X_USER_ID': 'derp', }
         resp = result.__call__.request('/', method='HEAD', headers=headers)
         self.assertEqual(self.app, resp)
-        self.assertFalse('neutron.context' in self.req)
+        self.assertIsNotNone(result.context)
 
     def test_create_strategy_neutron_no_user(self):
         """Attempt to create the neutron strategy if it is installed. This
         will probably never run inside of tox because test-requirements are
         weird."""
-        try:
-            from neutron import context
-            context
-        except ImportError as e:
-            self.skipTest("Neutron not installed. " + str(e))
+        if not CTX:
+            self.skipTest("Neutron not installed. ")
         result = context_filter.filter_factory(self.strat_neutron)(self.app)
         self.assertIsNotNone(result)
         self.assertTrue(isinstance(result,
@@ -88,4 +89,80 @@ class TestTryContext(test_base.TestBase):
         self.assertFalse('neutron.context' in self.req)
         headers = {'Content-Type': 'application/json', }
         resp = result.__call__.request('/', method='HEAD', headers=headers)
-        self.assertEqual(401, resp.status_code)
+        self.assertIsNotNone(result.context)
+        self.assertEqual(self.app, resp)
+
+    def test_create_strategy_neutron_with_no_roles(self):
+        """Attempt to create the neutron strategy if it is installed. This
+        will probably never run inside of tox because test-requirements are
+        weird."""
+        if not CTX:
+            self.skipTest("Neutron not installed. ")
+        result = context_filter.filter_factory(self.strat_neutron)(self.app)
+        self.assertIsNotNone(result)
+        self.assertTrue(isinstance(result,
+                                   context_filter.NeutronContextFilter))
+        self.assertFalse('neutron.context' in self.req)
+        headers = {'Content-Type': 'application/json',
+                   'X_ROLES': None, }
+        resp = result.__call__.request('/', method='HEAD', headers=headers)
+        self.assertEqual(self.app, resp)
+        self.assertIsNotNone(result.context)
+        self.assertTrue(hasattr(result.context, 'roles'))
+
+    def test_create_strategy_neutron_with_empty_roles(self):
+        """Attempt to create the neutron strategy if it is installed. This
+        will probably never run inside of tox because test-requirements are
+        weird."""
+        if not CTX:
+            self.skipTest("Neutron not installed. ")
+        result = context_filter.filter_factory(self.strat_neutron)(self.app)
+        self.assertIsNotNone(result)
+        self.assertTrue(isinstance(result,
+                                   context_filter.NeutronContextFilter))
+        self.assertFalse('neutron.context' in self.req)
+        headers = {'Content-Type': 'application/json',
+                   'X_ROLES': '', }
+        resp = result.__call__.request('/', method='HEAD', headers=headers)
+        self.assertEqual(self.app, resp)
+        self.assertIsNotNone(result.context)
+        self.assertTrue(hasattr(result.context, 'roles'))
+
+    def test_create_strategy_neutron_with_role(self):
+        """Attempt to create the neutron strategy if it is installed. This
+        will probably never run inside of tox because test-requirements are
+        weird."""
+        if not CTX:
+            self.skipTest("Neutron not installed. ")
+        result = context_filter.filter_factory(self.strat_neutron)(self.app)
+        self.assertIsNotNone(result)
+        self.assertTrue(isinstance(result,
+                                   context_filter.NeutronContextFilter))
+        self.assertFalse('neutron.context' in self.req)
+        headers = {'Content-Type': 'application/json',
+                   'X_ROLES': 'testrole', }
+        resp = result.__call__.request('/', method='HEAD', headers=headers)
+        self.assertEqual(self.app, resp)
+        self.assertIsNotNone(result.context)
+        self.assertTrue(hasattr(result.context, 'roles'))
+        self.assertTrue('testrole' in result.context.roles)
+
+    def test_create_strategy_neutron_with_roles(self):
+        """Attempt to create the neutron strategy if it is installed. This
+        will probably never run inside of tox because test-requirements are
+        weird."""
+        if not CTX:
+            self.skipTest("Neutron not installed. ")
+        result = context_filter.filter_factory(self.strat_neutron)(self.app)
+        self.assertIsNotNone(result)
+        self.assertTrue(isinstance(result,
+                                   context_filter.NeutronContextFilter))
+        self.assertFalse('neutron.context' in self.req)
+        headers = {'Content-Type': 'application/json',
+                   'X_ROLES': 'testrole, testrole2', }
+        resp = result.__call__.request('/', method='HEAD', headers=headers)
+        self.assertEqual(self.app, resp)
+        self.assertIsNotNone(result.context)
+        self.assertTrue(hasattr(result.context, 'roles'))
+        self.assertTrue('testrole' in result.context.roles)
+        self.assertTrue('testrole2' in result.context.roles)

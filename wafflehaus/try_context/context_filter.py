@@ -41,7 +41,7 @@ class ContextFilter(object):
 
     def _create_context(self, req):
         return self.app
-    
+
     @webob.dec.wsgify
     def __call__(self, req):
         return self._create_context(req)
@@ -50,8 +50,8 @@ class ContextFilter(object):
 class TestContextFilter(ContextFilter):
     def _create_context(self, req):
         kls = self._import_class('tests.test_try_context.TestContextClass')
-        context = kls()
-        req.environ['test.context'] = context
+        ctx = kls()
+        req.environ['test.context'] = ctx
         return self.app
 
 
@@ -59,10 +59,18 @@ class NeutronContextFilter(ContextFilter):
     def __init__(self, app, conf):
         super(NeutronContextFilter, self).__init__(app, conf)
 
+    def _process_roles(self, roles):
+        if roles is None:
+            roles = ''
+        roles = [r.strip() for r in roles.split(',')]
+        self.context.roles = roles
+
     def _create_context(self, req):
-        #NOTE(roaet): probably need to vet the req to this thing; headers?
         if not self.testing:
-            req.environ['neutron.context'] = context.get_admin_context()
+            ctx = context.get_admin_context()
+            self.context = ctx
+            self._process_roles(req.headers.get('X_ROLES', ''))
+            req.environ['neutron.context'] = self.context
         return self.app
 
 
