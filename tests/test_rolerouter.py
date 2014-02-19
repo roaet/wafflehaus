@@ -26,6 +26,13 @@ class TestRoleRouter(test_base.TestBase):
                            "route_cat": "cat_filter cat_app",
                            "route_dog": "dog_filter dog_app",
                            "route_default": "appx"}
+        self.key_conf = {"context_key": "animal.context",
+                         "routes": "cat dog",
+                         "roles_cat": "domestic outdoor",
+                         "roles_dog": "mutt",
+                         "route_cat": "cat_filter cat_app",
+                         "route_dog": "dog_filter dog_app",
+                         "route_default": "appx"}
 
         def named_mock(name):
             x = mock.Mock()
@@ -49,6 +56,19 @@ class TestRoleRouter(test_base.TestBase):
         self.assertEqual(len(result.roles), 3)
         self.assertTrue(all(k in result.roles.keys()
                             for k in ["domestic", "outdoor", "mutt"]))
+
+    def test_create_instance_with_key(self):
+        result = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
+                                               **self.key_conf)
+        self.assertTrue(isinstance(result, rolerouter.RoleRouter))
+        self.assertEqual(len(result.routes), 3)
+        self.assertTrue(all(k in result.routes.keys()
+                            for k in ["default", "cat", "dog"]))
+        self.assertEqual(len(result.roles), 3)
+        self.assertTrue(all(k in result.roles.keys()
+                            for k in ["domestic", "outdoor", "mutt"]))
+        self.assertEqual('animal.context', result.context_key)
+
 
     def test_call_to_domestic_role(self):
         context = mock.Mock()
@@ -112,30 +132,3 @@ class TestRoleRouter(test_base.TestBase):
                                            **self.local_conf)
         result = rr(req)
         self.assertEqual(result, "cat_filter")
-
-    def test_multiple_roles_from_different_routes_is_random(self):
-        context = mock.Mock()
-        context.roles = ["domestic", "mutt"]
-
-        req = mock.Mock()
-        req.environ = {"nova.context": context}
-
-        rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
-        self.assertTrue(result in ["cat_filter", "dog_filter"])
-
-    def test_multiple_roles_from_different_routes_in_different_order(self):
-        """Should use first route apps and filters for route listed in
-        local_conf (in setup above) no matter order in context.roles
-        """
-        context = mock.Mock()
-        context.roles = ["mutt", "domestic"]
-
-        req = mock.Mock()
-        req.environ = {"nova.context": context}
-
-        rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
-        self.assertTrue(result in ["cat_filter", "dog_filter"])
