@@ -14,27 +14,14 @@
 #    under the License.
 
 import logging
-from routes import Mapper
 
 import webob.dec
 import webob.exc
 
+import wafflehaus.resource_filter as rf
+
 
 class BlockResource(object):
-
-    def _parse_resources(self, resources):
-        self.resources = {}
-        if not resources:
-            return
-        work_list = [s.strip() for s in resources.split(',')]
-        for res in work_list:
-            res_split = res.split()
-            methods = [m.upper() for m in res_split[:-1]]
-            resource = res_split[-1]
-            if resource not in self.resources:
-                self.resources[resource] = []
-            for m in methods:
-                self.resources[resource].append(m)
 
     def __init__(self, app, conf):
         self.app = app
@@ -45,25 +32,13 @@ class BlockResource(object):
         self.user_id = conf.get('user_id')
         self.testing = (conf.get('testing') in
                         (True, 'true', 't', '1', 'on', 'yes', 'y'))
-
-        self._parse_resources(conf.get('resource'))
-
-    def _check_resource(self, req):
-        if len(self.resources) == 0:
-            return self.app
-        map = Mapper()
-        for resource, data in self.resources.iteritems():
-            map.connect(None, resource, controller=','.join(data))
-        res = map.routematch(req.path)
-        if res is None:
-            return self.app
-        if req.method in res[0]['controller'].split(','):
-            return webob.exc.HTTPForbidden()
-        return self.app
+        self.resources = rf.parse_resources(conf.get('resource'))
 
     @webob.dec.wsgify
     def __call__(self, req):
-        return self._check_resource(req)
+        if rf.matched_request(req, self.resources):
+            return webob.exc.HTTPForbidden()
+        return self.app
 
 
 def filter_factory(global_conf, **local_conf):
