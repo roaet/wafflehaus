@@ -14,7 +14,7 @@
 #    under the License.
 from routes import Mapper
 
-__all__ = ['_parse_resources']
+__all__ = ['matched_request', 'parse_resources']
 
 
 def parse_resources(resources):
