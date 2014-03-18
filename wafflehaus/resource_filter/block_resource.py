@@ -37,6 +37,7 @@ class BlockResource(object):
     @webob.dec.wsgify
     def __call__(self, req):
         if rf.matched_request(req, self.resources):
+            self.log.info("Blocked " + str(req.path))
             return webob.exc.HTTPForbidden()
         return self.app
 
