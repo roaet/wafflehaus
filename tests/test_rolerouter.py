@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import mock
-from wafflehaus import rolerouter
+from wafflehaus.routers import rolerouter
 from tests import test_base
 
 
