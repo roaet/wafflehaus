@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import mock
-from mock import patch
 from tests import test_base
 
 import webob.exc
 
 from wafflehaus.resource_filter import block_resource
+
 
 class TestResourceFilter(test_base.TestBase):
     def setUp(self):
@@ -29,7 +29,7 @@ class TestResourceFilter(test_base.TestBase):
         self.multi_conf = {'resource': 'post GET /widget, GET posT /derp'}
         self.collapse_conf = {'resource': 'posT /widget, GET /widget'}
         self.complex_conf = {'resource': 'posT /widget/{id}/sub/{sub_id}'}
-    
+
     def test_default_instance_create_simple(self):
         result = block_resource.filter_factory(self.simple_conf1)(self.app)
         self.assertIsNotNone(result)
@@ -39,7 +39,7 @@ class TestResourceFilter(test_base.TestBase):
         resources = result.resources
         self.assertTrue('/widget' in resources)
         self.assertEqual(1, len(resources['/widget']))
-    
+
     def test_default_instance_create_simple_multi_method(self):
         result = block_resource.filter_factory(self.simple_conf2)(self.app)
         resources = result.resources
@@ -47,7 +47,7 @@ class TestResourceFilter(test_base.TestBase):
         self.assertEqual(2, len(widget))
         self.assertTrue('POST' in widget)
         self.assertTrue('GET' in widget)
-    
+
     def test_default_instance_create_multi(self):
         result = block_resource.filter_factory(self.multi_conf)(self.app)
         resources = result.resources

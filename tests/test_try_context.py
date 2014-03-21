@@ -95,7 +95,7 @@ class TestTryContext(test_base.TestBase):
         self.assertFalse('neutron.context' in self.req)
         headers = {'Content-Type': 'application/json', }
         with patch('neutron.policy.get_admin_roles',
-                   self.get_admin_mock) as mocked_get:
+                   self.get_admin_mock):
             resp = result.__call__.request('/', method='HEAD', headers=headers)
         self.assertIsNotNone(result.context)
         self.assertEqual(self.app, resp)
@@ -114,7 +114,7 @@ class TestTryContext(test_base.TestBase):
         headers = {'Content-Type': 'application/json',
                    'X_ROLES': None, }
         with patch('neutron.policy.get_admin_roles',
-                   self.get_admin_mock) as mocked_get:
+                   self.get_admin_mock):
             resp = result.__call__.request('/', method='HEAD', headers=headers)
         self.assertEqual(self.app, resp)
         self.assertIsNotNone(result.context)
@@ -134,7 +134,7 @@ class TestTryContext(test_base.TestBase):
         headers = {'Content-Type': 'application/json',
                    'X_ROLES': '', }
         with patch('neutron.policy.get_admin_roles',
-                   self.get_admin_mock) as mocked_get:
+                   self.get_admin_mock):
             resp = result.__call__.request('/', method='HEAD', headers=headers)
         self.assertEqual(self.app, resp)
         self.assertIsNotNone(result.context)
@@ -154,7 +154,7 @@ class TestTryContext(test_base.TestBase):
         headers = {'Content-Type': 'application/json',
                    'X_ROLES': 'testrole', }
         with patch('neutron.policy.get_admin_roles',
-                   self.get_admin_mock) as mocked_get:
+                   self.get_admin_mock):
             resp = result.__call__.request('/', method='HEAD', headers=headers)
         self.assertEqual(self.app, resp)
         self.assertIsNotNone(result.context)
@@ -175,7 +175,7 @@ class TestTryContext(test_base.TestBase):
         headers = {'Content-Type': 'application/json',
                    'X_ROLES': 'testrole, testrole2', }
         with patch('neutron.policy.get_admin_roles',
-                   self.get_admin_mock) as mocked_get:
+                   self.get_admin_mock):
             resp = result.__call__.request('/', method='HEAD', headers=headers)
         self.assertEqual(self.app, resp)
         self.assertIsNotNone(result.context)
@@ -197,7 +197,7 @@ class TestTryContext(test_base.TestBase):
         headers = {'Content-Type': 'application/json',
                    'X_ROLES': 'testrole, testrole2', }
         with patch('neutron.policy.get_admin_roles',
-                   self.get_admin_mock) as mocked_get:
+                   self.get_admin_mock):
             resp = result.__call__.request('/', method='HEAD', headers=headers)
         self.assertEqual(self.app, resp)
         self.assertIsNotNone(result.context)

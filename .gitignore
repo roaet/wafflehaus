@@ -1,5 +1,6 @@
 *.py[cod]
 .venv/
+.cover-report/
 # C extensions
 *.so
 
