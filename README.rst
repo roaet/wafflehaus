@@ -44,6 +44,7 @@ Development Guidelines
    corresponding wafflehaus **subproject**
 6. Each package should have a README.rst
 7. Provide an example use-case of your middleware in the documentation
+8. Do not raise exceptions, return them
 
 Subprojects
 -----------
