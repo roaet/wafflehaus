@@ -12,6 +12,13 @@ resolution as a form of authentication. You provide a whitelisted domain list
 and this filter will reject all requests from continuing in the WSGI pipeline
 that do not meet the requirements.
 
+Use-Case
+~~~~~~~~
+
+Having no desire to authenticate between service-boundaries for performance
+reasons, one can ensure that a service is serving requests from trusted
+networks.
+
 Tips
 ~~~~
 
@@ -44,15 +51,3 @@ filter is working::
     whitelist = mydomain.com
     testing = true
     testing_remote_addr = 123.123.123.123 # a valid IP for whitelist
-
-Example Negative Testing Config
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Will always reject the request so you can see how your service reacts when
-a request is filtered::
-
-    [filter:dns_filter]
-    paste.filter_factory = wafflehaus.dns_filter.whitelist:filter_factory
-    whitelist = mydomain.com
-    negative_testing = true
-    testing_remote_addr = 123.123.123.123 # an invalid IP for whitelist

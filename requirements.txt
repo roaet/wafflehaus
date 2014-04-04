@@ -1,2 +1,4 @@
 dnspython
 webob
+oslo.config
+routes
