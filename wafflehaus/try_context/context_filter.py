@@ -18,7 +18,10 @@ import logging
 import webob.dec
 import webob.exc
 
-from neutron import context
+try:
+    from neutron import context
+except ImportError:
+    pass
 
 
 class ContextFilter(object):
@@ -57,7 +60,11 @@ class TestContextFilter(ContextFilter):
 
 class NeutronContextFilter(ContextFilter):
     def __init__(self, app, conf):
+        global context
         super(NeutronContextFilter, self).__init__(app, conf)
+        self.neutron_ctx = None
+        if context:
+            self.neutron_ctx = context
 
     def _process_roles(self, roles):
         if not self.context.roles:
@@ -70,8 +77,8 @@ class NeutronContextFilter(ContextFilter):
                 self.context.roles.append(role)
 
     def _create_context(self, req):
-        if not self.testing:
-            ctx = context.get_admin_context()
+        if self.neutron_ctx is None and not self.testing:
+            ctx = self.neutron_ctx.get_admin_context()
             self.context = ctx
             self._process_roles(req.headers.get('X_ROLES', ''))
             req.environ['neutron.context'] = self.context
