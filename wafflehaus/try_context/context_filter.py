@@ -77,7 +77,7 @@ class NeutronContextFilter(ContextFilter):
                 self.context.roles.append(role)
 
     def _create_context(self, req):
-        if self.neutron_ctx is None and not self.testing:
+        if self.neutron_ctx is not None and not self.testing:
             ctx = self.neutron_ctx.get_admin_context()
             self.context = ctx
             self._process_roles(req.headers.get('X_ROLES', ''))
