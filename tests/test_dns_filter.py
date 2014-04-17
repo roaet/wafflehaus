@@ -14,7 +14,6 @@
 #    under the License.
 import dns.exception
 import mock
-from mock import patch
 from tests import test_base
 import webob.exc
 
@@ -75,12 +74,6 @@ class TestDNSFilter(test_base.TestBase):
         self.good_ip = '192.168.1.1'
         self.bad_ip = '10.0.0.1'
 
-    def create_patch(self, name, func=None):
-        patcher = patch(name)
-        thing = patcher.start()
-        self.addCleanup(patcher.stop)
-        return thing
-
     def test_create_dns_filter(self):
         result = whitelist.filter_factory(self.conf)(self.app)
         self.assertIsNotNone(result)
@@ -97,6 +90,26 @@ class TestDNSFilter(test_base.TestBase):
         m_dns_rname.side_effect = ['omg.widget.com']
 
         resp = result.__call__.request('/widget', method='POST')
+        self.assertTrue(m_dns_rname.called_once)
+        self.assertTrue(m_resolve.called_once)
+        self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
+
+    def test_match_ok_with_forwarded_header(self):
+        result = whitelist.filter_factory(self.conf)(self.app)
+        m_addr = self.create_patch(self.addr_path)
+        m_addr.return_value = self.bad_ip
+
+        m_resolve = self.create_patch(self.resolver_path)
+        m_resolve.return_value = FakeResolver()
+
+        m_dns_rname = self.create_patch(self.dns_reverse)
+        m_dns_rname.side_effect = ['omg.widget.com']
+
+        ip_list = [self.good_ip, self.bad_ip]
+        headers = {'X-Forwarded-For': ','.join(ip_list)}
+
+        resp = result.__call__.request('/widget', method='POST',
+                                       headers=headers)
         self.assertTrue(m_dns_rname.called_once)
         self.assertTrue(m_resolve.called_once)
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
@@ -257,3 +270,22 @@ class TestDNSFilter(test_base.TestBase):
         result = whitelist.filter_factory({})(self.app)
         resp = result.__call__.request('/widget', method='POST')
         self.assertTrue(isinstance(resp, webob.exc.HTTPInternalServerError))
+
+    def test_fail_with_empty_forwarded_header(self):
+        result = whitelist.filter_factory(self.conf)(self.app)
+        m_addr = self.create_patch(self.addr_path)
+        m_addr.return_value = self.bad_ip
+
+        m_resolve = self.create_patch(self.resolver_path)
+        m_resolve.return_value = FakeResolver()
+
+        m_dns_rname = self.create_patch(self.dns_reverse)
+        m_dns_rname.side_effect = ['omg.widget.com']
+
+        headers = {'X-Forwarded-For': ''}
+
+        resp = result.__call__.request('/widget', method='POST',
+                                       headers=headers)
+        self.assertTrue(m_dns_rname.called_once)
+        self.assertTrue(m_resolve.called_once)
+        self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
