@@ -12,6 +12,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from mock import patch
 import unittest2
 
 #from neutron import context
@@ -19,6 +20,12 @@ import unittest2
 
 class TestBase(unittest2.TestCase):
     '''Class to decide which unit test class to inherit from uniformly.'''
+
+    def create_patch(self, name, func=None):
+        patcher = patch(name)
+        thing = patcher.start()
+        self.addCleanup(patcher.stop)
+        return thing
 
     def setUp(self):
         super(TestBase, self).setUp()

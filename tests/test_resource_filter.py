@@ -29,6 +29,7 @@ class TestResourceFilter(test_base.TestBase):
         self.multi_conf = {'resource': 'post GET /widget, GET posT /derp'}
         self.collapse_conf = {'resource': 'posT /widget, GET /widget'}
         self.complex_conf = {'resource': 'posT /widget/{id}/sub/{sub_id}'}
+        self.format_conf1 = {'resource': 'POST /widget{.format:json|xml}'}
 
     def test_default_instance_create_simple(self):
         result = block_resource.filter_factory(self.simple_conf1)(self.app)
@@ -70,6 +71,31 @@ class TestResourceFilter(test_base.TestBase):
         result = block_resource.filter_factory(self.simple_conf1)(self.app)
         resp = result.__call__.request('/widget', method='POST')
         self.assertTrue(isinstance(resp, webob.exc.HTTPException))
+
+    def test_match_formatted_route1(self):
+        result = block_resource.filter_factory(self.format_conf1)(self.app)
+        resp = result.__call__.request('/cog', method='POST')
+        self.assertEqual(self.app, resp)
+
+        resp = result.__call__.request('/widget', method='POST')
+        self.assertTrue(isinstance(resp, webob.exc.HTTPException))
+        resp = result.__call__.request('/widget', method='PUT')
+        self.assertEqual(self.app, resp)
+
+        resp = result.__call__.request('/widget.json', method='POST')
+        self.assertTrue(isinstance(resp, webob.exc.HTTPException))
+        resp = result.__call__.request('/widget.json', method='PUT')
+        self.assertEqual(self.app, resp)
+
+        resp = result.__call__.request('/widget.xml', method='POST')
+        self.assertTrue(isinstance(resp, webob.exc.HTTPException))
+        resp = result.__call__.request('/widget.xml', method='PUT')
+        self.assertEqual(self.app, resp)
+
+        resp = result.__call__.request('/widget.derp', method='POST')
+        self.assertEqual(self.app, resp)
+        resp = result.__call__.request('/widget.derp', method='PUT')
+        self.assertEqual(self.app, resp)
 
     def test_match_multi_route(self):
         result = block_resource.filter_factory(self.multi_conf)(self.app)

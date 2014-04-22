@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 """This middleware is intended to be used with paste.deploy."""
-import logging
 import webob.dec
 import webob.exc
 
@@ -21,21 +20,21 @@ import dns.exception
 import dns.resolver
 import dns.reversename
 
+import wafflehaus.base
+
 
 # pylint: disable=R0903
-class DNSWhitelist(object):
+class DNSWhitelist(wafflehaus.base.WafflehausBase):
     """DNSWhitelist middleware will DNS lookup REMOTE_ADDR and attempt to
     match result to a whitelist. A failed match will 403.
     """
 
     def __init__(self, app, conf):
-        self.conf = conf
-        self.app = app
-        logname = __name__
-        self.log = logging.getLogger(conf.get('log_name', logname))
+        super(DNSWhitelist, self).__init__(app, conf)
+        self.log.name = conf.get('log_name', __name__)
         self.log.info('Starting wafflehaus dns whitelist middleware')
-        self.testing = (conf.get('testing') in
-                        (True, 'true', 't', '1', 'on', 'yes', 'y'))
+        self.ignore_forwarded = (conf.get('ignore_forwarded') in
+                                 (True, 'true', 't', '1', 'on', 'yes', 'y'))
         self.whitelist = self._create_whitelist(conf.get('whitelist'))
 
     def _create_resolver(self):
@@ -76,6 +75,14 @@ class DNSWhitelist(object):
     def get_remote_addr(self, request):
         return request.remote_addr
 
+    def parse_x_forwarded_for(self, xforward):
+        """It is a CSV list of IPs."""
+        self.log.info("Forwarded is : " + str(xforward))
+        ip_list = xforward.split(',')
+        if len(ip_list):
+            return ip_list[0]
+        return None
+
     @webob.dec.wsgify
     def __call__(self, req):
         """Performs white listing of REMOTE_ADDR and will fail if:
@@ -87,6 +94,12 @@ class DNSWhitelist(object):
             return webob.exc.HTTPInternalServerError()
 
         remote_addr = self.get_remote_addr(req)
+
+        if 'X-Forwarded-For' in req.headers and not self.ignore_forwarded:
+            remote_addr = self.parse_x_forwarded_for(
+                req.headers['X-Forwarded-For'])
+            if remote_addr is None:
+                return webob.exc.HTTPForbidden()
 
         if self.testing:
             remote_addr = self.conf.get('testing_remote_addr', remote_addr)
