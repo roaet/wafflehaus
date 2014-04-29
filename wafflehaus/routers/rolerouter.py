@@ -1,4 +1,4 @@
-# Copyright 2013 Openstack Foundation # All Rights Reserved.
+#2013 Openstack Foundation # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -18,51 +18,38 @@ import webob.dec
 log = logging.getLogger(__name__)
 
 
-def rolerouter_factory(loader, global_conf, **local_conf):
-    return RoleRouter.factory(loader, global_conf, **local_conf)
-
-
 class RoleRouter(object):
     """The purpose of this class is to route filters based on the role
     obtained from keystone.context
     """
 
-    def __init__(self, routeinfo, context_key=None):
-        self.routes = routeinfo["routes"]
-        self.roles = routeinfo["roles"]
-        self.context_key = context_key
-        if self.context_key is None:
-            self.context_key = 'nova.context'
+    def __init__(self, loader, conf):
+        self.context_key = conf.get('context_key')
+        self.roles = {}
+        self.routes = {}
 
-    @classmethod
-    def factory(cls, loader, global_conf, **local_conf):
-        routeinfo = {"roles": {}, "routes": {}}
-        routes = local_conf["routes"]
-        routes = routes.split()
-        # get roles for routes
+        # This assumes roles are labeled role_<role> in conf
+        routes = conf["routes"].split()
         for route in routes:
             key = "roles_%s" % route
-            if key in local_conf:
-                roles = local_conf[key]
-                roles = roles.split()
+            if key in conf:
+                roles = conf[key].split()
                 for role in roles:
-                    routeinfo["roles"][role] = route
+                    self.roles[role] = route
 
-        # get pipeline for routes but add default route
+        # This returns the particular route's app after applying the filters
         routes.append("default")
         for route in routes:
             key = "route_%s" % route
-            if key in local_conf:
-                pipeline = local_conf[key]
+            if key in conf:
+                pipeline = conf[key]
                 pipeline = pipeline.split()
-                filters = [loader.get_filter(n) for n in pipeline[:-1]]
+                filters = [loader.get_filter(f) for f in pipeline[:-1]]
                 app = loader.get_app(pipeline[-1])
                 filters.reverse()
-                for filter in filters:
-                    app = filter(app)
-                routeinfo["routes"][route] = app
-        context_key = local_conf.get('context_key')
-        return cls(routeinfo, context_key)
+                for f in filters:
+                    app = f(app)
+                self.routes[route] = app
 
     @webob.dec.wsgify(RequestClass=webob.Request)
     def __call__(self, req):
@@ -76,4 +63,14 @@ class RoleRouter(object):
         for key in self.roles.keys():
             if key in roles:
                 return self.routes[self.roles[key]]
+
         return self.routes["default"]
+
+
+def rolerouter_factory(loader, global_conf, **local_conf):
+    """Returns a WSGI composite app for use with paste.deploy"""
+    conf = global_conf.copy()
+    conf.update(local_conf)
+
+    return RoleRouter(loader, conf)
+
