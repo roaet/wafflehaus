@@ -69,7 +69,6 @@ class TestRoleRouter(test_base.TestBase):
                             for k in ["domestic", "outdoor", "mutt"]))
         self.assertEqual('animal.context', result.context_key)
 
-
     def test_call_to_domestic_role(self):
         context = mock.Mock()
         context.roles = ["domestic"]
@@ -117,7 +116,7 @@ class TestRoleRouter(test_base.TestBase):
                                            **self.local_conf)
         result = rr(req)
 
-        #NOTE(jmeridth/roaet): this needs to be called explicitly because
+        # NOTE(jmeridth/roaet): this needs to be called explicitly because
         # it doesn't get called in the filter chain
         self.assertEqual(result(), "appx")
 

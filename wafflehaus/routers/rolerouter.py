@@ -73,4 +73,3 @@ def rolerouter_factory(loader, global_conf, **local_conf):
     conf.update(local_conf)
 
     return RoleRouter(loader, conf)
-
