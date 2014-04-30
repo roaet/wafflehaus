@@ -24,7 +24,7 @@ class RoleRouter(object):
     """
 
     def __init__(self, loader, conf):
-        self.context_key = conf.get('context_key')
+        self.context_key = conf.get('context_key', 'nova.context')
         self.roles = {}
         self.routes = {}
 
