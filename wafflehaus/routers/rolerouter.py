@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 class RoleRouter(object):
     """The purpose of this class is to route filters based on the role
-    obtained from keystone.context
+    obtained from keystone.context.
     """
 
     def __init__(self, loader, conf):
@@ -68,7 +68,7 @@ class RoleRouter(object):
 
 
 def rolerouter_factory(loader, global_conf, **local_conf):
-    """Returns a WSGI composite app for use with paste.deploy"""
+    """Returns a WSGI composite app for use with paste.deploy."""
     conf = global_conf.copy()
     conf.update(local_conf)
 
