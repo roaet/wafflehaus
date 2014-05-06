@@ -20,13 +20,13 @@ from tests import test_base
 class TestRoleRouter(test_base.TestBase):
     def setUp(self):
         super(TestRoleRouter, self).setUp()
-        self.local_conf = {"routes": "cat dog",
+        self.local_conf = {"enabled": "true", "routes": "cat dog",
                            "roles_cat": "domestic outdoor",
                            "roles_dog": "mutt",
                            "route_cat": "cat_filter cat_app",
                            "route_dog": "dog_filter dog_app",
                            "route_default": "appx"}
-        self.key_conf = {"context_key": "animal.context",
+        self.key_conf = {"enabled": "true", "context_key": "animal.context",
                          "routes": "cat dog",
                          "roles_cat": "domestic outdoor",
                          "roles_dog": "mutt",

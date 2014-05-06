@@ -39,17 +39,21 @@ class TestTryContext(test_base.TestBase):
         self.context_init = self.create_patch(self.test_cls + '._mockme')
 
         self.strat_test = {"context_strategy": self.test_cls,
+                           'enabled': 'true',
                            "context_key": "context.test", }
 
         self.strat_testing = {"context_strategy": self.test_cls,
                               "context_key": "context.test",
+                              'enabled': 'true',
                               "testing": "true"}
 
         self.unknown = {"context_strategy": "unknown.class",
+                        'enabled': 'true',
                         "context_key": "context.test", }
 
         self.unknown_testing = {"context_strategy": "unknown.class",
                                 "context_key": "context.test",
+                                'enabled': 'true',
                                 "testing": "true"}
         self.get_admin_mock = mock.Mock()
         self.get_admin_mock.return_value = ['admin']

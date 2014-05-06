@@ -24,3 +24,5 @@ class WafflehausBase(object):
         self.log = logging.getLogger(conf.get('log_name', logname))
         self.testing = (conf.get('testing') in
                         (True, 'true', 't', '1', 'on', 'yes', 'y'))
+        self.enabled = (conf.get('enabled', False) in
+                        (True, 'true', 't', '1', 'on', 'yes', 'y'))
