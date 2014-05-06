@@ -79,7 +79,8 @@ Role Router setup::
   detected in the keystone context the router will select the corresponding
   ``route_`` pipeline, in this case route_managed
 * The route_managed setting on line 7 is similar to the line described above
-  (line 6). What is expected here is a list of filters followed by an app. It
-  is possible that the app be another composite, and even another role router.
+  (line 6). What is expected here, is a list of filters followed by an app. Make
+  sure to order your filters in the order you want them wrapped. It is possible
+  that the app be another composite, and even another role router.
 * The route_default on line 9 is the pipeline selected by the role router if
   none of the roles were matched. This setting is required

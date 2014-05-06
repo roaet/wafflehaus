@@ -47,7 +47,7 @@ class TestRoleRouter(test_base.TestBase):
         self.global_conf = {}
 
     def test_get_default_instance(self):
-        result = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
+        result = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                                **self.local_conf)
         self.assertTrue(isinstance(result, rolerouter.RoleRouter))
         self.assertEqual(len(result.routes), 3)
@@ -58,7 +58,7 @@ class TestRoleRouter(test_base.TestBase):
                             for k in ["domestic", "outdoor", "mutt"]))
 
     def test_create_instance_with_key(self):
-        result = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
+        result = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                                **self.key_conf)
         self.assertTrue(isinstance(result, rolerouter.RoleRouter))
         self.assertEqual(len(result.routes), 3)
@@ -69,7 +69,6 @@ class TestRoleRouter(test_base.TestBase):
                             for k in ["domestic", "outdoor", "mutt"]))
         self.assertEqual('animal.context', result.context_key)
 
-
     def test_call_to_domestic_role(self):
         context = mock.Mock()
         context.roles = ["domestic"]
@@ -77,7 +76,7 @@ class TestRoleRouter(test_base.TestBase):
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
+        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                            **self.local_conf)
         result = rr(req)
         self.assertEqual(result, "cat_filter")
@@ -89,7 +88,7 @@ class TestRoleRouter(test_base.TestBase):
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
+        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                            **self.local_conf)
         result = rr(req)
         self.assertEqual(result, "cat_filter")
@@ -101,7 +100,7 @@ class TestRoleRouter(test_base.TestBase):
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
+        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                            **self.local_conf)
         result = rr(req)
         self.assertEqual(result, "dog_filter")
@@ -113,11 +112,11 @@ class TestRoleRouter(test_base.TestBase):
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
+        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                            **self.local_conf)
         result = rr(req)
 
-        #NOTE(jmeridth/roaet): this needs to be called explicitly because
+        # NOTE(jmeridth/roaet): this needs to be called explicitly because
         # it doesn't get called in the filter chain
         self.assertEqual(result(), "appx")
 
@@ -128,7 +127,7 @@ class TestRoleRouter(test_base.TestBase):
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.RoleRouter.factory(self.loader, self.global_conf,
+        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                            **self.local_conf)
         result = rr(req)
         self.assertEqual(result, "cat_filter")
