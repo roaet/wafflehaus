@@ -89,6 +89,9 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
             - PTR query of REMOTE_ADDR does not end with a whitelisted domain
             - A query of PTR query fails to match REMOTE_ADDR
         """
+        if not self.enabled:
+            return self.app
+
         if not self.whitelist:
             self.log.error("Whitelist not set")
             return webob.exc.HTTPInternalServerError()

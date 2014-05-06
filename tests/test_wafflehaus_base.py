@@ -33,3 +33,15 @@ class TestWafflehausBase(test_base.TestBase):
         self.assertIsNotNone(base)
         self.assertTrue(base.testing)
         self.assertEqual(base.app, self.app)
+
+    def test_create_default_instance_is_not_enabled(self):
+        base = WafflehausBase(self.app, {})
+        self.assertIsNotNone(base)
+        self.assertEqual(base.app, self.app)
+        self.assertFalse(base.enabled)
+
+    def test_create_default_instance_configured_enabled(self):
+        base = WafflehausBase(self.app, {'enabled': 'true'})
+        self.assertIsNotNone(base)
+        self.assertEqual(base.app, self.app)
+        self.assertTrue(base.enabled)

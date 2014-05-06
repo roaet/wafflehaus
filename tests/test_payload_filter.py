@@ -26,19 +26,19 @@ class TestPayloadFilter(test_base.TestBase):
         complex_widget = 'widget:sub:thing=thingie'
         multi_widget = 'widgets:thing=thingie'
         multi_subwidget = 'widgets:sub:thing=thingie'
-        self.simple_conf1 = {'resource': 'POST /widget',
+        self.simple_conf1 = {'resource': 'POST /widget', 'enabled': 'true',
                              'defaults': simple_widget}
-        self.simple_conf2 = {'resource': 'POST /widget',
+        self.simple_conf2 = {'resource': 'POST /widget', 'enabled': 'true',
                              'defaults': complex_widget}
-        self.multi_conf = {'resource': 'POST /widget',
+        self.multi_conf = {'resource': 'POST /widget', 'enabled': 'true',
                            'defaults': '%s,%s' % (simple_widget,
                                                   complex_widget)}
-        self.multi_confr = {'resource': 'POST /widget',
+        self.multi_confr = {'resource': 'POST /widget', 'enabled': 'true',
                             'defaults': '%s,%s' % (complex_widget,
                                                    simple_widget)}
-        self.plural_conf = {'resource': 'POST /widget',
+        self.plural_conf = {'resource': 'POST /widget', 'enabled': 'true',
                             'defaults': multi_widget}
-        self.plural_conf2 = {'resource': 'POST /widget',
+        self.plural_conf2 = {'resource': 'POST /widget', 'enabled': 'true',
                              'defaults': multi_subwidget}
 
         self.body1 = '{"widget": { "name": "foo"}}'

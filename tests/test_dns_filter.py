@@ -64,8 +64,10 @@ class TestDNSFilter(test_base.TestBase):
 
     def setUp(self):
         self.app = mock.Mock()
-        self.conf = {'whitelist': 'widget.com'}
-        self.testconf = {'whitelist': 'widget.com', 'testing': 'true'}
+        self.conf_disabled = {'whitelist': 'widget.com'}
+        self.conf = {'whitelist': 'widget.com', 'enabled': 'true'}
+        self.testconf = {'whitelist': 'widget.com', 'testing': 'true',
+                         'enabled': 'true'}
         self.mod_path = 'wafflehaus.dns_filter.whitelist.DNSWhitelist'
         self.addr_path = '%s.get_remote_addr' % self.mod_path
         self.resolver_path = '%s._create_resolver' % self.mod_path
@@ -77,6 +79,11 @@ class TestDNSFilter(test_base.TestBase):
     def test_create_dns_filter(self):
         result = whitelist.filter_factory(self.conf)(self.app)
         self.assertIsNotNone(result)
+
+    def test_create_dns_filter_not_enabled_by_default(self):
+        result = whitelist.filter_factory(self.conf_disabled)(self.app)
+        self.assertIsNotNone(result)
+        self.assertFalse(result.enabled)
 
     def test_match_ok(self):
         result = whitelist.filter_factory(self.conf)(self.app)
@@ -267,7 +274,7 @@ class TestDNSFilter(test_base.TestBase):
         self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_no_whitelist_error(self):
-        result = whitelist.filter_factory({})(self.app)
+        result = whitelist.filter_factory({'enabled': 'true'})(self.app)
         resp = result.__call__.request('/widget', method='POST')
         self.assertTrue(isinstance(resp, webob.exc.HTTPInternalServerError))
 

@@ -24,12 +24,16 @@ class TestResourceFilter(test_base.TestBase):
     def setUp(self):
         self.app = mock.Mock()
 
-        self.simple_conf1 = {'resource': 'PoST /widget'}
-        self.simple_conf2 = {'resource': 'PoSt GeT /widget'}
-        self.multi_conf = {'resource': 'post GET /widget, GET posT /derp'}
-        self.collapse_conf = {'resource': 'posT /widget, GET /widget'}
-        self.complex_conf = {'resource': 'posT /widget/{id}/sub/{sub_id}'}
-        self.format_conf1 = {'resource': 'POST /widget{.format:json|xml}'}
+        self.simple_conf1 = {'resource': 'PoST /widget', 'enabled': 'true'}
+        self.simple_conf2 = {'resource': 'PoSt GeT /widget', 'enabled': 'true'}
+        self.multi_conf = {'resource': 'post GET /widget, GET posT /derp',
+                           'enabled': 'true'}
+        self.collapse_conf = {'resource': 'posT /widget, GET /widget',
+                              'enabled': 'true'}
+        self.complex_conf = {'resource': 'posT /widget/{id}/sub/{sub_id}',
+                             'enabled': 'true'}
+        self.format_conf1 = {'resource': 'POST /widget{.format:json|xml}',
+                             'enabled': 'true'}
 
     def test_default_instance_create_simple(self):
         result = block_resource.filter_factory(self.simple_conf1)(self.app)

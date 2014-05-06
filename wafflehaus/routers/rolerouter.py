@@ -15,10 +15,12 @@ import logging
 import webob
 import webob.dec
 
+import wafflehaus.base
+
 log = logging.getLogger(__name__)
 
 
-class RoleRouter(object):
+class RoleRouter(wafflehaus.base.WafflehausBase):
     """The purpose of this class is to route filters based on the role
     obtained from keystone.context.
     """
@@ -50,9 +52,15 @@ class RoleRouter(object):
                 for f in filters:
                     app = f(app)
                 self.routes[route] = app
+                if key == 'default':
+                    self.app = app
+        super(RoleRouter, self).__init__(app, conf)
 
     @webob.dec.wsgify(RequestClass=webob.Request)
     def __call__(self, req):
+        if not self.enabled:
+            return self.app
+
         context = req.environ.get(self.context_key)
 
         if not context:

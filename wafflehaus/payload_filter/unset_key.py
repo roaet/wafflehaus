@@ -31,6 +31,9 @@ class DefaultPayload(wafflehaus.base.WafflehausBase):
 
     @webob.dec.wsgify
     def __call__(self, req):
+        if not self.enabled:
+            return self.app
+
         if not self.defaults:
             return self.app
         if rf.matched_request(req, self.resources):
