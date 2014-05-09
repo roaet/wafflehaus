@@ -5,6 +5,8 @@ Wafflehaus
 Wafflehaus is a collection of WSGI middleware for OpenStack that adds
 functionality with zero impact to code. 
 
+Each middleware is lovingly called a waffle.
+
 Cloud providers of all sizes have problems dealing with business-requirements
 of their cloud and diverging from upstream. By putting business logic into
 middleware providers can create special cases without changing upstream code.
@@ -18,14 +20,44 @@ Not diverging from upstream is wonderful because:
 
 Beyond the above benefits, other benefits of using wafflehaus are:
 
-* You gain access to plenty of predefined middlewares that can usually be
+* You gain access to plenty of predefined waffles that can usually be
   configured to support your special case
-* All of the middleware in wafflehaus are designed to be configured in the
+* All of the waffles in wafflehaus are designed to be configured in the
   api-paste.ini file and thus can be distributed however you wish (puppet,
   chef, ansible)
 
 Finally, although Wafflehaus was intended to work with OpenStack, it is
 possible to use it in front of any WSGI compliant service.
+
+Using Wafflehaus
+----------------
+
+Using wafflehaus is simple! An stable version is available on pypi but you can
+always install wafflehaus using pip+git. Modify your api-paste.ini to include
+your waffle of choice and add the waffle where you wish in the composite
+that defines your app.
+
+Example:
+
+    [composite:neutronapi_v2_0]
+    use = call:neutron.auth:pipeline_factory
+    noauth = dns_filter request_id catch_errors extensions neutronapiapp_v2_0
+    keystone = dns_filter request_id catch_errors authtoken keystonecontext extensions neutronapiapp_v2_0
+
+    # This is the waffle
+    [filter:dns_filter]
+    paste.filter_factory = wafflehaus.dns_filter.whitelist:filter_factory
+    whitelist = mydomain.com
+    # Uncomment the line below to activate the waffle
+    # enabled = true
+
+Then restart the service (or SIGHUP if it applies). If you have an error in
+your configuration you'll see it in your logs very early, fix that and you'll
+be rolling.
+
+Note: All waffles are disabled until explicitly set to enabled with the
+enabled = true configuration flag. This allows you to deploy a waffle without
+concerns (beyond configuration being correct or not).
 
 Contributing
 ------------
@@ -45,6 +77,8 @@ Development Guidelines
 6. Each package should have a README.rst
 7. Provide an example use-case of your middleware in the documentation
 8. Do not raise exceptions, return them
+9. Do not assume any other waffle exists if you can; document if you can't
+10. Readable code is preferred over clever code
 
 Subprojects
 -----------
