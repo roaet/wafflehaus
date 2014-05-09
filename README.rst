@@ -32,17 +32,18 @@ possible to use it in front of any WSGI compliant service.
 Using Wafflehaus
 ----------------
 
-Using wafflehaus is simple! An stable version is available on pypi but you can
+Using wafflehaus is simple! A stable version is available on pypi but you can
 always install wafflehaus using pip+git. Modify your api-paste.ini to include
 your waffle of choice and add the waffle where you wish in the composite
 that defines your app.
 
-Example:
+Example using dns_filter::
 
     [composite:neutronapi_v2_0]
     use = call:neutron.auth:pipeline_factory
     noauth = dns_filter request_id catch_errors extensions neutronapiapp_v2_0
-    keystone = dns_filter request_id catch_errors authtoken keystonecontext extensions neutronapiapp_v2_0
+    keystone = dns_filter request_id catch_errors authtoken keystonecontext
+               extensions neutronapiapp_v2_0
 
     # This is the waffle
     [filter:dns_filter]
