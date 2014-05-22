@@ -60,6 +60,14 @@ Note: All waffles are disabled until explicitly set to enabled with the
 enabled = true configuration flag. This allows you to deploy a waffle without
 concerns (beyond configuration being correct or not).
 
+Current Deployment Quirks
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Right now all the subprojects do not include wafflehaus in their requirements
+file. This is because of weird quirks we have been happening while deploying
+wafflehaus' subprojects. We are working to get those fixed but please do note:
+the subprojects do require wafflehaus to be installed.
+
 Contributing
 ------------
 
