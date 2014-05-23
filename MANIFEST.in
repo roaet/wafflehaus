@@ -1,2 +1,2 @@
-sample-paste.ini
-*.rst
+include sample-paste.ini
+include *.rst
