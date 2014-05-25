@@ -25,15 +25,14 @@ How it is Configured
 
     [filter:try_context]
     paste.filter_factory = wafflehaus.try_context.context_filter:filter_factory
-    context_strategy = <insert strategy here>
+    # the neutron context is used as an example
+    context_strategy = wafflehaus.neutron.context.neutron_context.NeutronContextFilter
+    enabled = true
 
-Please refer to the code in context.filter:filter_factory to see the most
-up-to-date listing of what strategies are supported. Otherwise the supported
-strategies as of this writing are:
+Each subproject will define a context if available. These context packages are
+developed as needed so some may not be available yet.
 
-- **none** : which is a noop
-- **test** : which inserts a test.context into the WSGI environment
-- **neutron** : which instantiates a neutron admin context into neutron.context
+Leaving context_strategy blank, or not defining it at all is a noop.
 
 Placement in the WSGI Stack
 ---------------------------

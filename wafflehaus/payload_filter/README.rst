@@ -66,6 +66,7 @@ Configuration
     paste.filter_factory = wafflehaus.payload_filter.unset_key:filter_factory
     resource = POST /v2.0/subnets
     defaults = subnet:gateway_ip=null
+    enabled = true
 
 The above sample configuration does the following:
 

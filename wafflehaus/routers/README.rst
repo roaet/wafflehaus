@@ -61,6 +61,7 @@ Role Router setup::
     7  route_managed = requestnetworks osapi_compute_app_v2
     8  # DEFAULT PIPELINE:
     9  route_default = osapi_compute_app_v2
+    10 enabled = true
 
 * The section header on line 1 is required by paste and defines the label that
   will be used when referencing the Role Router middleware.

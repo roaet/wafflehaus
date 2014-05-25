@@ -35,6 +35,7 @@ A basic configuration for normal use::
     [filter:dns_filter]
     paste.filter_factory = wafflehaus.dns_filter.whitelist:filter_factory
     whitelist = mydomain.com
+    enabled = true
 
 This will pass any request that resolves to a domain that ends with
 *mydomain.com* (such as wwww.mydomain.com, mydomain.com,
@@ -53,6 +54,7 @@ filter is working::
     whitelist = mydomain.com random.org
     testing = true
     testing_remote_addr = 123.123.123.123 # a valid IP for whitelist
+    enabled = true
 
 Dealing with Load Balanced Requests with X-Forwarded-For
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
