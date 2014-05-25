@@ -14,7 +14,7 @@ Use Case
 ~~~~~~~~
 
 You wish to block certain methods to a resource. This works exceptionally well
-when using the role router to prevent access based on user's role.
+when using a router to block based on some logic.
 
 Example
 ~~~~~~~
