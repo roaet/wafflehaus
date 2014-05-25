@@ -29,6 +29,11 @@ Beyond the above benefits, other benefits of using wafflehaus are:
 Finally, although Wafflehaus was intended to work with OpenStack, it is
 possible to use it in front of any WSGI compliant service.
 
+Getting Help
+------------
+
+The official channel for wafflehaus support in on freenode in #wafflehaus. 
+
 Using Wafflehaus
 ----------------
 
