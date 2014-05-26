@@ -100,7 +100,7 @@ Subprojects
 In some situations it is impossible to completely ignore a dependency on a 
 project. In those situations there are subprojects for those dependencies:
 
-* `wafflehaus.glance <http://github.com/roaet/wafflehaus.glance`_
+* `wafflehaus.glance <http://github.com/roaet/wafflehaus.glance>`_
 * `wafflehaus.neutron <http://github.com/roaet/wafflehaus.neutron>`_
 * `wafflehaus.nova <http://github.com/roaet/wafflehaus.nova>`_
 
