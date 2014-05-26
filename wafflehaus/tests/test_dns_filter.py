@@ -14,10 +14,10 @@
 #    under the License.
 import dns.exception
 import mock
-from tests import test_base
 import webob.exc
 
 from wafflehaus.dns_filter import whitelist
+from wafflehaus import tests
 
 
 def do_lookup(address):
@@ -60,7 +60,7 @@ class FakeResolver():
                 return FakeARecord(good=False)
 
 
-class TestDNSFilter(test_base.TestBase):
+class TestDNSFilter(tests.TestCase):
 
     def setUp(self):
         self.app = mock.Mock()

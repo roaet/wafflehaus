@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import mock
+
 from wafflehaus.routers import rolerouter
-from tests import test_base
+from wafflehaus import tests
 
 
-class TestRoleRouter(test_base.TestBase):
+class TestRoleRouter(tests.TestCase):
     def setUp(self):
         super(TestRoleRouter, self).setUp()
         self.local_conf = {"enabled": "true", "routes": "cat dog",

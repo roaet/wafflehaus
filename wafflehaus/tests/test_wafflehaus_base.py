@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import mock
-from tests import test_base
 
 from wafflehaus.base import WafflehausBase
+from wafflehaus import tests
 
 
-class TestWafflehausBase(test_base.TestBase):
+class TestWafflehausBase(tests.TestCase):
     def setUp(self):
         self.app = mock.Mock()
 

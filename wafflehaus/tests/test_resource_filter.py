@@ -13,14 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import mock
-from tests import test_base
-
 import webob.exc
 
 from wafflehaus.resource_filter import block_resource
+from wafflehaus import tests
 
 
-class TestResourceFilter(test_base.TestBase):
+class TestResourceFilter(tests.TestCase):
     def setUp(self):
         self.app = mock.Mock()
 

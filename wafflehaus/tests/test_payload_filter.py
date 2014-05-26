@@ -14,12 +14,12 @@
 #    under the License.
 import json
 import mock
-from tests import test_base
 
 from wafflehaus.payload_filter import unset_key
+from wafflehaus import tests
 
 
-class TestPayloadFilter(test_base.TestBase):
+class TestPayloadFilter(tests.TestCase):
     def setUp(self):
         self.app = mock.Mock()
         simple_widget = 'widget:thing=thingie'

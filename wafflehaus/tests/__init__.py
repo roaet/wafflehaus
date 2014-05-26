@@ -12,33 +12,19 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 from mock import patch
 import unittest2
 
-#from neutron import context
 
-
-class TestBase(unittest2.TestCase):
+class TestCase(unittest2.TestCase):
     '''Class to decide which unit test class to inherit from uniformly.'''
+
+    def setUp(self):
+        super(TestCase, self).setUp()
 
     def create_patch(self, name, func=None):
         patcher = patch(name)
         thing = patcher.start()
         self.addCleanup(patcher.stop)
         return thing
-
-    def setUp(self):
-        super(TestBase, self).setUp()
-#        self.context = context.Context('fake', 'fake', is_admin=False)
-
-#        class FakeContext(object):
-#            def __new__(cls, *args, **kwargs):
-#                return super(FakeContext, self).__new__(cls)
-#
-#            def __enter__(*args, **kwargs):
-#                pass
-#
-#            def __exit__(*args, **kwargs):
-#                pass
-#
-#        self.context.session.begin = FakeContext
