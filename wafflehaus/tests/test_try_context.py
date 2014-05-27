@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import mock
-from wafflehaus.try_context import context_filter
-from tests import test_base
 import webob.exc
+
+from wafflehaus import tests
+from wafflehaus.try_context import context_filter
 
 
 class TestContextClass(context_filter.BaseContextStrategy):
@@ -28,14 +29,14 @@ class TestContextClass(context_filter.BaseContextStrategy):
         pass
 
 
-class TestTryContext(test_base.TestBase):
+class TestTryContext(tests.TestCase):
 
     def setUp(self):
         super(TestTryContext, self).setUp()
         self.app = mock.Mock()
         self.app.return_value = "OK"
         self.start_response = mock.Mock()
-        self.test_cls = "tests.test_try_context.TestContextClass"
+        self.test_cls = "wafflehaus.tests.test_try_context.TestContextClass"
         self.context_init = self.create_patch(self.test_cls + '._mockme')
 
         self.strat_test = {"context_strategy": self.test_cls,
@@ -59,7 +60,7 @@ class TestTryContext(test_base.TestBase):
         self.get_admin_mock.return_value = ['admin']
 
     def test_create_strategy_test(self):
-        """This is a test strategy to see if this thing works"""
+        """This is a test strategy to see if this thing works."""
         result = context_filter.filter_factory(self.strat_test)(self.app)
         self.assertTrue(isinstance(result, context_filter.ContextFilter))
         resp = result.__call__.request('/something', method='HEAD')
@@ -70,7 +71,7 @@ class TestTryContext(test_base.TestBase):
         self.assertEqual(1, self.context_init.call_count)
 
     def test_create_strategy_test_noop_testing(self):
-        """This is a test strategy to see if this thing works"""
+        """This is a test strategy to see if this thing works."""
         result = context_filter.filter_factory(self.strat_test)(self.app)
         self.assertTrue(isinstance(result, context_filter.ContextFilter))
         resp = result.__call__.request('/something', method='HEAD')
