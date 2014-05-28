@@ -41,3 +41,8 @@ Example
     # it is important that the two wild cards (id, owner_id) are different
     resource = POST /widget/{id}/owner/{owner_id}
     enabled = true
+
+    [example 5]
+    # prevents POST to a complex uri with additional format options
+    resource = POST /widget{.format}
+    enabled = true
