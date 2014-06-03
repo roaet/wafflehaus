@@ -29,10 +29,11 @@ class TestWafflehausBase(tests.TestCase):
         self.assertEqual(base.app, self.app)
 
     def test_create_default_instance_with_testing(self):
-        base = WafflehausBase(self.app, {'testing': 'true'})
-        self.assertIsNotNone(base)
-        self.assertTrue(base.testing)
-        self.assertEqual(base.app, self.app)
+        for testing in (True, 'True', 'true', 't', '1', 'on', 'yes', 'y'):
+            base = WafflehausBase(self.app, {'testing': testing})
+            self.assertIsNotNone(base)
+            self.assertTrue(base.testing)
+            self.assertEqual(base.app, self.app)
 
     def test_create_default_instance_is_not_enabled(self):
         base = WafflehausBase(self.app, {})
@@ -41,7 +42,8 @@ class TestWafflehausBase(tests.TestCase):
         self.assertFalse(base.enabled)
 
     def test_create_default_instance_configured_enabled(self):
-        base = WafflehausBase(self.app, {'enabled': 'true'})
-        self.assertIsNotNone(base)
-        self.assertEqual(base.app, self.app)
-        self.assertTrue(base.enabled)
+        for enabled in (True, 'True', 'true', 't', '1', 'on', 'yes', 'y'):
+            base = WafflehausBase(self.app, {'enabled': enabled})
+            self.assertIsNotNone(base)
+            self.assertEqual(base.app, self.app)
+            self.assertTrue(base.enabled)
