@@ -188,9 +188,6 @@ class TestDNSFilter(tests.TestCase):
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_no_fail_no_dns_entries_while_testing(self):
-        """When the resolver doesn't have the DNS entries there it shouldn't
-        error. This is considered just an unknown person trying to get in.
-        """
         result = whitelist.filter_factory(self.testconf)(self.app)
         m_addr = self.create_patch(self.addr_path)
         resp = result.__call__.request('/widget', method='POST')
@@ -264,9 +261,6 @@ class TestDNSFilter(tests.TestCase):
         self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_no_dns_entries(self):
-        """When the resolver doesn't have the DNS entries there it shouldn't
-        error. This is considered just an unknown person trying to get in.
-        """
         result = whitelist.filter_factory(self.conf)(self.app)
         m_addr = self.create_patch(self.addr_path)
         resp = result.__call__.request('/widget', method='POST')

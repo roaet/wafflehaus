@@ -14,6 +14,17 @@
 #    under the License.
 import logging
 
+from oslo.config import cfg
+
+GLOBAL_CONF = cfg.CONF
+
+wafflehaus_global_opts = [
+    cfg.BoolOpt('runtime_reconfigurable', default=False,
+                help='Will enable header reconfiguration'),
+]
+
+GLOBAL_CONF.register_opts(wafflehaus_global_opts, 'WAFFLEHAUS')
+
 
 class WafflehausBase(object):
 
@@ -26,3 +37,15 @@ class WafflehausBase(object):
                         (True, 'True', 'true', 't', '1', 'on', 'yes', 'y'))
         self.enabled = (conf.get('enabled', False) in
                         (True, 'True', 'true', 't', '1', 'on', 'yes', 'y'))
+        self.reconfigure = GLOBAL_CONF.WAFFLEHAUS.runtime_reconfigurable
+
+    def _override(self, req):
+        pass
+
+    def _override_caller(self, req):
+        if not self.reconfigure:
+            return
+        self._override(req)
+
+    def __call__(self, req):
+        self._override_caller(req)

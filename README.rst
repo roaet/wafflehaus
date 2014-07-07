@@ -65,6 +65,22 @@ Note: All waffles are disabled until explicitly set to enabled with the
 enabled = true configuration flag. This allows you to deploy a waffle without
 concerns (beyond configuration being correct or not).
 
+Using Runtime Reconfiguring
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is difficult to test wafflehaus in CI environments because of how
+PasteDeploy works. The server will need to be restarted for new configurations
+(api-paste) to be loaded. Runtime reconfiguring allows you to change the
+configurations using headers. Each waffle that wants to support this will need
+to override the WafflehausBase:_override method, and will need to call the
+base's __call__.
+
+Finally to enable this the global configuration (nova.conf, neutron.conf) needs
+to have the following::
+
+    [WAFFLEHAUS]
+    runtime_reconfigurable = True
+
 Current Deployment Quirks
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

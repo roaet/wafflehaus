@@ -13,22 +13,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 """This middleware is intended to be used with paste.deploy."""
-import webob.dec
-import webob.exc
 
 import dns.exception
 import dns.resolver
 import dns.reversename
+import webob.dec
+import webob.exc
 
 import wafflehaus.base
 
 
 # pylint: disable=R0903
+# pylint: disable=H405
 class DNSWhitelist(wafflehaus.base.WafflehausBase):
-    """DNSWhitelist middleware will DNS lookup REMOTE_ADDR and attempt to
-    match result to a whitelist. A failed match will 403.
-    """
+    """DNSWhitelist middleware.
 
+    Will DNS lookup REMOTE_ADDR and attempt to match result to a whitelist. A
+    failed match will 403.
+    """
     def __init__(self, app, conf):
         super(DNSWhitelist, self).__init__(app, conf)
         self.log.name = conf.get('log_name', __name__)
@@ -61,9 +63,6 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
         return match
 
     def check_domain_to_whitelist(self, domain):
-        """Checks to ensure a domain ends with at least one of a whitelisted
-        domain-ending string.
-        """
         self.log.info("Checking " + str(domain))
         if domain.endswith('.'):
             domain = domain[:-1]
@@ -85,10 +84,7 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
 
     @webob.dec.wsgify
     def __call__(self, req):
-        """Performs white listing of REMOTE_ADDR and will fail if:
-            - PTR query of REMOTE_ADDR does not end with a whitelisted domain
-            - A query of PTR query fails to match REMOTE_ADDR
-        """
+        super(DNSWhitelist, self).__call__(req)
         if not self.enabled:
             return self.app
 
