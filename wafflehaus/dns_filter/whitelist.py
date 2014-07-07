@@ -35,8 +35,7 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
         super(DNSWhitelist, self).__init__(app, conf)
         self.log.name = conf.get('log_name', __name__)
         self.log.info('Starting wafflehaus dns whitelist middleware')
-        self.ignore_forwarded = (conf.get('ignore_forwarded') in
-                                 (True, 'true', 't', '1', 'on', 'yes', 'y'))
+        self.ignore_forwarded = (conf.get('ignore_forwarded') in self.truths)
         self.whitelist = self._create_whitelist(conf.get('whitelist'))
 
     def _create_resolver(self):
@@ -74,6 +73,9 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
     def get_remote_addr(self, request):
         return request.remote_addr
 
+    def _override(self, req):
+        super(DNSWhitelist, self)._override(req)
+
     def parse_x_forwarded_for(self, xforward):
         """It is a CSV list of IPs."""
         self.log.info("Forwarded is : " + str(xforward))
@@ -85,7 +87,9 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
     @webob.dec.wsgify
     def __call__(self, req):
         super(DNSWhitelist, self).__call__(req)
+        self.log.info('derp %s' % self.enabled)
         if not self.enabled:
+            self.log.info("derasdf")
             return self.app
 
         if not self.whitelist:

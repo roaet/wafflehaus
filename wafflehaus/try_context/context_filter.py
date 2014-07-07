@@ -56,6 +56,7 @@ class ContextFilter(wafflehaus.base.WafflehausBase):
 
     @webob.dec.wsgify
     def __call__(self, req):
+        super(ContextFilter, self).__call__(req)
         if not self.enabled:
             return self.app
 

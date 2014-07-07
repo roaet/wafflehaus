@@ -25,6 +25,9 @@ Beyond the above benefits, other benefits of using wafflehaus are:
 * All of the waffles in wafflehaus are designed to be configured in the
   api-paste.ini file and thus can be distributed however you wish (puppet,
   chef, ansible)
+* It is a fairly democratic and simple way to test new openstack features and
+  designs as if many people use a particular waffle it should be added to the
+  relevant projects' feature set
 
 Finally, although Wafflehaus was intended to work with OpenStack, it is
 possible to use it in front of any WSGI compliant service.
@@ -80,6 +83,14 @@ to have the following::
 
     [WAFFLEHAUS]
     runtime_reconfigurable = True
+
+All waffles that, at a minimum, call the base's __call__ will support runtime
+enable/disable and toggling of testing with the following headers:
+
+* X_WAFFLEHAUS_CLASSNAME_ENABLED
+* X_WAFFLEHAUS_CLASSNAME_TESTING
+
+where *CLASSNAME* is the upper() of the class name of the waffle.
 
 Current Deployment Quirks
 ~~~~~~~~~~~~~~~~~~~~~~~~~

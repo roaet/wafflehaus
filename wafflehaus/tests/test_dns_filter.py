@@ -14,10 +14,14 @@
 #    under the License.
 import dns.exception
 import mock
+from oslo.config import cfg
 import webob.exc
 
 from wafflehaus.dns_filter import whitelist
 from wafflehaus import tests
+
+
+CONF = cfg.CONF
 
 
 def do_lookup(address):
@@ -97,8 +101,9 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = ['omg.widget.com']
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_match_ok_with_forwarded_header(self):
@@ -117,8 +122,9 @@ class TestDNSFilter(tests.TestCase):
 
         resp = result.__call__.request('/widget', method='POST',
                                        headers=headers)
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
 
 # TESTING FUNCTIONS
@@ -135,8 +141,9 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = ['omg.widget.com']
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_no_fail_on_match_bad_address_while_testing(self):
@@ -151,8 +158,9 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = ['omg.widget.com']
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_no_fail_match_bad_name_while_testing(self):
@@ -167,8 +175,9 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = ['something.bad.com']
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_no_fail_match_unknown_address_while_testing(self):
@@ -183,15 +192,16 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = [dns.exception.DNSException]
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_no_fail_no_dns_entries_while_testing(self):
         result = whitelist.filter_factory(self.testconf)(self.app)
         m_addr = self.create_patch(self.addr_path)
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_addr.called_once)
+        self.assertEqual(1, m_addr.call_count)
         self.assertFalse(isinstance(resp, webob.exc.HTTPForbidden))
 
 # END TESTING
@@ -208,8 +218,9 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = ['omg.widget.com']
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_match_bad_address(self):
@@ -224,8 +235,9 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = ['omg.widget.com']
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_match_bad_name(self):
@@ -240,8 +252,9 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = ['something.bad.com']
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_match_unknown_address(self):
@@ -256,8 +269,9 @@ class TestDNSFilter(tests.TestCase):
         m_dns_rname.side_effect = [dns.exception.DNSException]
 
         resp = result.__call__.request('/widget', method='POST')
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_no_dns_entries(self):
@@ -287,6 +301,27 @@ class TestDNSFilter(tests.TestCase):
 
         resp = result.__call__.request('/widget', method='POST',
                                        headers=headers)
-        self.assertTrue(m_dns_rname.called_once)
-        self.assertTrue(m_resolve.called_once)
+        self.assertEqual(1, m_addr.call_count)
+        self.assertEqual(1, m_dns_rname.call_count)
+        self.assertEqual(1, m_resolve.call_count)
         self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
+
+    def test_runtime_overrides(self):
+        CONF.WAFFLEHAUS.runtime_reconfigurable = True
+        result = whitelist.filter_factory(self.conf)(self.app)
+        m_addr = self.create_patch(self.addr_path)
+        m_addr.return_value = self.good_ip
+
+        m_resolve = self.create_patch(self.resolver_path)
+        m_resolve.return_value = FakeResolver()
+
+        m_dns_rname = self.create_patch(self.dns_reverse)
+        m_dns_rname.side_effect = ['omg.widget.com']
+
+        headers = {'X_WAFFLEHAUS_DNSWHITELIST_ENABLED': False}
+
+        result.__call__.request('/widget', method='POST',
+                                headers=headers)
+        self.assertEqual(0, m_addr.call_count)
+        self.assertEqual(0, m_dns_rname.call_count)
+        self.assertEqual(0, m_resolve.call_count)

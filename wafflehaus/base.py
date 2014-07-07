@@ -15,6 +15,7 @@
 import logging
 
 from oslo.config import cfg
+import webob.request
 
 GLOBAL_CONF = cfg.CONF
 
@@ -31,16 +32,29 @@ class WafflehausBase(object):
     def __init__(self, app, conf):
         self.conf = conf
         self.app = app
+        self.header_prefix = 'X_WAFFLEHAUS'
+        self.truths = (True, 'True', 'true', 't', '1', 'on', 'yes', 'y')
         logname = __name__
         self.log = logging.getLogger(conf.get('log_name', logname))
-        self.testing = (conf.get('testing') in
-                        (True, 'True', 'true', 't', '1', 'on', 'yes', 'y'))
-        self.enabled = (conf.get('enabled', False) in
-                        (True, 'True', 'true', 't', '1', 'on', 'yes', 'y'))
+        self.testing = (conf.get('testing') in self.truths)
+        self.enabled = (conf.get('enabled', False) in self.truths)
         self.reconfigure = GLOBAL_CONF.WAFFLEHAUS.runtime_reconfigurable
 
     def _override(self, req):
-        pass
+        if not isinstance(req, webob.request.BaseRequest):
+            """Ensure that the request is not a mock"""
+            return
+        name = self.__class__.__name__
+
+        header_enabled = "%s_%s_ENABLED" % (self.header_prefix, name.upper())
+        if header_enabled in req.headers:
+            val = req.headers[header_enabled]
+            self.enabled = val in self.truths
+
+        header_testing = "%s_%s_TESTING" % (self.header_prefix, name.upper())
+        if header_testing in req.headers:
+            val = req.headers[header_testing]
+            self.testing = val in self.truths
 
     def _override_caller(self, req):
         if not self.reconfigure:
