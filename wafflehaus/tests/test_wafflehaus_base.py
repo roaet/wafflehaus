@@ -13,9 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import mock
+from oslo.config import cfg
 
 from wafflehaus.base import WafflehausBase
 from wafflehaus import tests
+
+
+CONF = cfg.CONF
 
 
 class TestWafflehausBase(tests.TestCase):
@@ -47,3 +51,19 @@ class TestWafflehausBase(tests.TestCase):
             self.assertIsNotNone(base)
             self.assertEqual(base.app, self.app)
             self.assertTrue(base.enabled)
+
+    def test_handle_header_override_called_when_configured(self):
+        oc_path = 'wafflehaus.base.WafflehausBase._override'
+        CONF.WAFFLEHAUS.runtime_reconfigurable = True
+        m_override_caller = self.create_patch(oc_path)
+        base = WafflehausBase(self.app, {})
+        base.__call__(None)
+        self.assertTrue(m_override_caller.called)
+
+    def test_handle_header_override_not_called_when_not_configured(self):
+        oc_path = 'wafflehaus.base.WafflehausBase._override'
+        CONF.WAFFLEHAUS.runtime_reconfigurable = False
+        m_override_caller = self.create_patch(oc_path)
+        base = WafflehausBase(self.app, {})
+        base.__call__(None)
+        self.assertFalse(m_override_caller.called)

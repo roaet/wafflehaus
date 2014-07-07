@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import logging
+
 import webob
 import webob.dec
 
@@ -21,7 +22,9 @@ log = logging.getLogger(__name__)
 
 
 class RoleRouter(wafflehaus.base.WafflehausBase):
-    """The purpose of this class is to route filters based on the role
+    """RoleRouter
+
+    The purpose of this class is to route filters based on the role
     obtained from keystone.context.
     """
 

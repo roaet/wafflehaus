@@ -3,7 +3,6 @@ distribute>=0.6.24
 mock
 coverage
 discover
-pep8==1.4.5
 nose
 unittest2
 hacking
