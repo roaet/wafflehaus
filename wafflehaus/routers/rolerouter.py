@@ -61,6 +61,7 @@ class RoleRouter(wafflehaus.base.WafflehausBase):
 
     @webob.dec.wsgify(RequestClass=webob.Request)
     def __call__(self, req):
+        super(RoleRouter, self).__call__(req)
         if not self.enabled:
             return self.app
 
