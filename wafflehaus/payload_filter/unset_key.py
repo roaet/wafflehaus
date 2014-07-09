@@ -29,6 +29,15 @@ class DefaultPayload(wafflehaus.base.WafflehausBase):
         self.resources = rf.parse_resources(conf.get('resource'))
         self.defaults = pf.get_defaults(conf.get('defaults'))
 
+    def _override(self, req):
+        super(DefaultPayload, self)._override(req)
+        new_resource = self._reconf(req, 'str', 'resource')
+        if new_resource is not None:
+            self.resources = rf.parse_resources(new_resource)
+        new_defaults = self._reconf(req, 'str', 'defaults')
+        if new_defaults is not None:
+            self.defaults = pf.get_defaults(new_defaults)
+
     @webob.dec.wsgify
     def __call__(self, req):
         super(DefaultPayload, self).__call__(req)

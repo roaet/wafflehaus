@@ -131,3 +131,22 @@ class TestResourceFilter(tests.TestCase):
         result = block_resource.filter_factory(self.simple_conf1)(self.app)
         resp = result.__call__.request('/widget', method='GET')
         self.assertEqual(self.app, resp)
+
+    def test_override_runtime(self):
+        self.set_reconfigure()
+        result = block_resource.filter_factory(self.simple_conf1)(self.app)
+        headers = {'X_WAFFLEHAUS_BLOCKRESOURCE_ENABLED': False}
+        resp = result.__call__.request('/widget', method='POST',
+                                       headers=headers)
+        self.assertEqual(self.app, resp)
+        headers = {'X_WAFFLEHAUS_BLOCKRESOURCE_ENABLED': True}
+        resp = result.__call__.request('/widget', method='POST',
+                                       headers=headers)
+        self.assertTrue(isinstance(resp, webob.exc.HTTPException))
+        headers = {'X_WAFFLEHAUS_BLOCKRESOURCE_RESOURCE': 'GET /derp'}
+        resp = result.__call__.request('/widget', method='POST',
+                                       headers=headers)
+        self.assertEqual(self.app, resp)
+        resp = result.__call__.request('/derp', method='GET',
+                                       headers=headers)
+        self.assertTrue(isinstance(resp, webob.exc.HTTPException))

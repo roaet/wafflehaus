@@ -75,6 +75,11 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
 
     def _override(self, req):
         super(DNSWhitelist, self)._override(req)
+        new_whitelist = self._reconf(req, 'str', 'whitelist', None)
+        if new_whitelist is not None:
+            self.whitelist = self._create_whitelist(new_whitelist)
+        self.ignore_forwarded = self._reconf(req, 'bool', 'ignore_forwarded',
+                                             self.ignore_forwarded)
 
     def parse_x_forwarded_for(self, xforward):
         """It is a CSV list of IPs."""
@@ -87,9 +92,7 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
     @webob.dec.wsgify
     def __call__(self, req):
         super(DNSWhitelist, self).__call__(req)
-        self.log.info('derp %s' % self.enabled)
         if not self.enabled:
-            self.log.info("derasdf")
             return self.app
 
         if not self.whitelist:
@@ -107,16 +110,11 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
         if self.testing:
             remote_addr = self.conf.get('testing_remote_addr', remote_addr)
 
-        self.log.debug("DNS check of %s against %s" % (remote_addr,
-                                                       str(self.whitelist)))
-
         res = self._create_resolver()
 
         try:
             name = dns.reversename.from_address(remote_addr)
-            self.log.info("name is : " + str(name))
             ptr = res.query(name, "PTR")[0]
-            self.log.info('ptr is ' + str(ptr))
 
             if not self.check_domain_to_whitelist(str(name)):
                 self.log.warning("DNS whitelist matching failure")
@@ -126,7 +124,6 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
                     return self.app
 
             a_record = res.query(str(ptr), "A")
-            self.log.info('a record is : ' + str(a_record))
         except dns.exception.DNSException:
             msg = "Missing DNS entries?"
             self.log.error("DNS Error during query: " + msg)
