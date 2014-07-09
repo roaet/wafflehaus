@@ -13,15 +13,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 from mock import patch
+from oslo.config import cfg
 import unittest2
+
+
+CONF = cfg.CONF
 
 
 class TestCase(unittest2.TestCase):
     '''Class to decide which unit test class to inherit from uniformly.'''
-
     def setUp(self):
         super(TestCase, self).setUp()
+        CONF.WAFFLEHAUS.runtime_reconfigurable = False
+        self.app = mock.Mock()
+
+    def set_reconfigure(self):
+        CONF.WAFFLEHAUS.runtime_reconfigurable = True
 
     def create_patch(self, name, func=None):
         patcher = patch(name)

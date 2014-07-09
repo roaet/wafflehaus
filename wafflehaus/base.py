@@ -40,21 +40,24 @@ class WafflehausBase(object):
         self.enabled = (conf.get('enabled', False) in self.truths)
         self.reconfigure = GLOBAL_CONF.WAFFLEHAUS.runtime_reconfigurable
 
+    def _reconf(self, req, type, header_suffix, default=None):
+        name = self.__class__.__name__.upper()
+        ret = default
+        header = "%s_%s_%s" % (self.header_prefix, name, header_suffix.upper())
+        if header in req.headers:
+            val = req.headers[header]
+            if type == 'bool':
+                ret = val in self.truths
+            if type == 'str':
+                ret = val
+        return ret
+
     def _override(self, req):
         if not isinstance(req, webob.request.BaseRequest):
             """Ensure that the request is not a mock"""
             return
-        name = self.__class__.__name__
-
-        header_enabled = "%s_%s_ENABLED" % (self.header_prefix, name.upper())
-        if header_enabled in req.headers:
-            val = req.headers[header_enabled]
-            self.enabled = val in self.truths
-
-        header_testing = "%s_%s_TESTING" % (self.header_prefix, name.upper())
-        if header_testing in req.headers:
-            val = req.headers[header_testing]
-            self.testing = val in self.truths
+        self.enabled = self._reconf(req, 'bool', 'enabled', self.enabled)
+        self.testing = self._reconf(req, 'bool', 'testing', self.testing)
 
     def _override_caller(self, req):
         if not self.reconfigure:

@@ -194,3 +194,17 @@ class TestPayloadFilter(tests.TestCase):
             self.assertTrue('name' in sub)
             self.assertTrue('thing' in sub)
             self.assertEqual('thingie', sub['thing'])
+
+    def test_override_runtime(self):
+        self.set_reconfigure()
+        result = unset_key.filter_factory(self.plural_conf2)(self.app)
+        headers = {'X_WAFFLEHAUS_DEFAULTPAYLOAD_ENABLED': False}
+        resp = result.__call__.request('/widget', method='POST',
+                                       body=self.body5, headers=headers)
+        self.assertEqual(self.app, resp)
+        self.assertFalse(hasattr(result, 'body'))
+        headers = {'X_WAFFLEHAUS_DEFAULTPAYLOAD_ENABLED': True}
+        resp = result.__call__.request('/widget', method='POST',
+                                       body=self.body5, headers=headers)
+        self.assertEqual(self.app, resp)
+        self.assertTrue(hasattr(result, 'body'))
