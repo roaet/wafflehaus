@@ -16,7 +16,7 @@
 #    under the License.
 import setuptools
 
-version = '0.3.0'
+version = '0.3.2'
 
 setuptools.setup(
     name='wafflehaus',

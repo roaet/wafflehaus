@@ -25,8 +25,13 @@ class BlockResource(wafflehaus.base.WafflehausBase):
         super(BlockResource, self).__init__(app, conf)
         self.log.name = conf.get('log_name', __name__)
         self.log.info('Starting wafflehaus resource blocker middleware')
-        self.user_id = conf.get('user_id')
         self.resources = rf.parse_resources(conf.get('resource'))
+
+    def _override(self, req):
+        super(BlockResource, self)._override(req)
+        new_resource = self._reconf(req, 'str', 'resource')
+        if new_resource is not None:
+            self.resources = rf.parse_resources(new_resource)
 
     @webob.dec.wsgify
     def __call__(self, req):

@@ -12,19 +12,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import mock
-from oslo.config import cfg
-
 from wafflehaus.base import WafflehausBase
 from wafflehaus import tests
 
 
-CONF = cfg.CONF
-
-
 class TestWafflehausBase(tests.TestCase):
-    def setUp(self):
-        self.app = mock.Mock()
 
     def test_create_default_instance(self):
         base = WafflehausBase(self.app, {})
@@ -53,8 +45,8 @@ class TestWafflehausBase(tests.TestCase):
             self.assertTrue(base.enabled)
 
     def test_handle_header_override_called_when_configured(self):
+        self.set_reconfigure()
         oc_path = 'wafflehaus.base.WafflehausBase._override'
-        CONF.WAFFLEHAUS.runtime_reconfigurable = True
         m_override_caller = self.create_patch(oc_path)
         base = WafflehausBase(self.app, {})
         base.__call__(None)
@@ -62,7 +54,6 @@ class TestWafflehausBase(tests.TestCase):
 
     def test_handle_header_override_not_called_when_not_configured(self):
         oc_path = 'wafflehaus.base.WafflehausBase._override'
-        CONF.WAFFLEHAUS.runtime_reconfigurable = False
         m_override_caller = self.create_patch(oc_path)
         base = WafflehausBase(self.app, {})
         base.__call__(None)

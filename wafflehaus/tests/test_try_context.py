@@ -105,3 +105,17 @@ class TestTryContext(tests.TestCase):
         self.assertTrue(isinstance(result, context_filter.ContextFilter))
         resp = result.__call__.request('/something', method='HEAD')
         self.assertEqual(self.app, resp)
+
+    def test_override_runtime_enabled(self):
+        """The none strategy simply is a noop."""
+        self.set_reconfigure()
+        headers = {'X_WAFFLEHAUS_CONTEXTFILTER_ENABLED': False}
+        result = context_filter.filter_factory(self.strat_test)(self.app)
+        self.assertTrue(isinstance(result, context_filter.ContextFilter))
+        resp = result.__call__.request('/something', method='HEAD',
+                                       headers=headers)
+        self.assertEqual(self.app, resp)
+        self.assertEqual(0, self.context_init.call_count)
+        self.assertTrue(isinstance(result, context_filter.ContextFilter))
+        """Should be 1 because of a new instance."""
+        self.assertEqual(0, self.context_init.call_count)

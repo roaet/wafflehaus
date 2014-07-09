@@ -14,14 +14,10 @@
 #    under the License.
 import dns.exception
 import mock
-from oslo.config import cfg
 import webob.exc
 
 from wafflehaus.dns_filter import whitelist
 from wafflehaus import tests
-
-
-CONF = cfg.CONF
 
 
 def do_lookup(address):
@@ -307,7 +303,7 @@ class TestDNSFilter(tests.TestCase):
         self.assertTrue(isinstance(resp, webob.exc.HTTPForbidden))
 
     def test_runtime_overrides(self):
-        CONF.WAFFLEHAUS.runtime_reconfigurable = True
+        self.set_reconfigure()
         result = whitelist.filter_factory(self.conf)(self.app)
         m_addr = self.create_patch(self.addr_path)
         m_addr.return_value = self.good_ip
