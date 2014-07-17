@@ -27,17 +27,11 @@ class EditResponse(WafflehausBase):
         super(EditResponse, self).__init__(app, conf)
         self.log.name = conf.get('log_name', __name__)
         self.log.info('Starting wafflehaus edit attributes middleware')
-        self.resources = {}
-        resources = conf.get('resources')
-        for resource in resources.split():
-            self.resources[resource] = {
-                'path': rf.parse_resources(conf.get('%s_path' % resource)),
-                'key': conf.get('%s_key' % resource),
-                'value': conf.get('%s_value' % resource)}
+        resources = rf.parse_resources(conf.get('resources'))
         return
 
-    def _change_attribs(self, body_json, resource):
-        body = json.loads(body_json)
+    def _change_attribs(self, req, resp):
+        resp_body = resp.json
 
         # This could be considerably better. Recursion, bleh.
         def walk_keys(data):
@@ -54,20 +48,14 @@ class EditResponse(WafflehausBase):
 
         return json.dumps(walk_keys(body))
 
-    @wsgify.middleware
-    def __wrapped(self, app, req):
-        for key, value in self.resources.items():
-            if rf.matched_request(req, value['path']):
-                resp = req.get_response(app)
-                resp.body = self._change_attribs(resp.body, value)
-        return self.app
-
     @wsgify
     def __call__(self, req):
         if not self.enabled:
             return self.app
-
-        return self.__wrapped(self.app)
+        if rf.matched_request(req, self.resources):
+            resp = req.get_response(app)
+            resp = self._change_attribs(req, resp)
+        return resp
 
 
 def filter_factory(global_conf, **local_conf):
