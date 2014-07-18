@@ -17,11 +17,12 @@ Configuration
 Optional Definitions
 
 ::
-    # Resource names can be abitrary, but must match on path and attrib key names
-    resources = network port
-    # Associated resource path
-    network_path = GET POST PUT /v2.0/networks
-    port_path = GET POST PUT /v2.0/ports
+    # Filter names can be abitrary, but must match on resource and attrib key
+    # names
+    filters = network port
+    # Associated resource method and path
+    network_resource = GET POST PUT /v2.0/networks
+    port_resource = GET POST PUT /v2.0/ports
     # Associated attribute name (Defaults to delete, unless a value given below)
     network_key = bridge
     port_key = ipam_strategy

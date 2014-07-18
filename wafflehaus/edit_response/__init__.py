@@ -27,34 +27,53 @@ class EditResponse(WafflehausBase):
         super(EditResponse, self).__init__(app, conf)
         self.log.name = conf.get('log_name', __name__)
         self.log.info('Starting wafflehaus edit attributes middleware')
-        resources = rf.parse_resources(conf.get('resources'))
+        self.resources = {}
+        filters = conf.get('resources')
+        if filters is None:
+            self.log.warning("EditResponse waffle could not find any filters in"
+                             " it's configuration.")
+            return
+        for resource_filter in filters:
+            self.resources[resource_filter] = {
+                "resource": rf.parse_resource(
+                    conf.get("%s_resource" % resource_filter)),
+                "attribute": conf.get("%s_key" % resource_filter),
+                "value": conf.get("%s_value" % resource_filter)}
         return
 
     def _change_attribs(self, req, resp):
         resp_body = resp.json
 
         # This could be considerably better. Recursion, bleh.
-        def walk_keys(data):
+        def walk_keys(data, level=0):
             for key, value in data.items():
-                if key == resource['key']:
-                    if resource['value'] is not None:
-                        data[key] = resource['value']
+                if key in self.resource.keys():
+                    if resource[key]['value'] is not None:
+                        self.log.debug('Replacing "{0}": "{1}" with '
+                                       '"{0}": "{2}"'.format(key, value,
+                                       self.resource[key]['value']))
+                        data[key] = self.resource[key]['value']
                     else:
                         del(data[key])
                 else:
                     if isinstance(value, dict):
-                        data[key] = walk_keys(value)
+                        level += 1
+                        data[key] = walk_keys(value, level=level)
             return data
 
-        return json.dumps(walk_keys(body))
+        return resp
 
     @wsgify
     def __call__(self, req):
+        """Returns a response if processed or an app if skipped"""
         if not self.enabled:
             return self.app
-        if rf.matched_request(req, self.resources):
-            resp = req.get_response(app)
-            resp = self._change_attribs(req, resp)
+        if hasattr(self, resources): 
+            for resource_filter in self.resources.keys():
+                if rf.matched_request(req, 
+                        self.resources[resource_filter]["resource"]):
+                    resp = req.get_response(app)
+                    resp = self._change_attribs(req, resp)
         return resp
 
 
@@ -63,7 +82,7 @@ def filter_factory(global_conf, **local_conf):
     conf = global_conf.copy()
     conf.update(local_conf)
 
-    def block_resource(app):
+    def wrapper(app):
         return EditResponse(app, conf)
 
-    return block_resource
+    return wrapper
