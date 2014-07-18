@@ -22,20 +22,19 @@ import wafflehaus.resource_filter as rf
 
 
 class EditResponse(WafflehausBase):
-
     def __init__(self, app, conf):
         super(EditResponse, self).__init__(app, conf)
         self.log.name = conf.get('log_name', __name__)
         self.log.info('Starting wafflehaus edit attributes middleware')
         self.resources = {}
-        filters = conf.get('resources')
+        filters = conf.get('filters')
         if filters is None:
             self.log.warning("EditResponse waffle could not find any filters in"
                              " it's configuration.")
             return
-        for resource_filter in filters:
+        for resource_filter in filters.split():
             self.resources[resource_filter] = {
-                "resource": rf.parse_resource(
+                "resource": rf.parse_resources(
                     conf.get("%s_resource" % resource_filter)),
                 "attribute": conf.get("%s_key" % resource_filter),
                 "value": conf.get("%s_value" % resource_filter)}
