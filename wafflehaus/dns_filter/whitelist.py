@@ -92,7 +92,6 @@ class DNSWhitelist(wafflehaus.base.WafflehausBase):
     @webob.dec.wsgify
     def __call__(self, req):
         super(DNSWhitelist, self).__call__(req)
-        self.log.info('derp %s' % self.enabled)
         if not self.enabled:
             return self.app
 
