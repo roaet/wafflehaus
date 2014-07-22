@@ -67,11 +67,11 @@ class EditResponse(WafflehausBase):
         """Returns a response if processed or an app if skipped"""
         if not self.enabled:
             return self.app
-        if hasattr(self, resources): 
+        if hasattr(self, "resources"): 
             for resource_filter in self.resources.keys():
                 if rf.matched_request(req, 
                         self.resources[resource_filter]["resource"]):
-                    resp = req.get_response(app)
+                    resp = req.get_response(self.app)
                     resp = self._change_attribs(req, resp)
         return resp
 
