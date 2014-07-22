@@ -68,7 +68,7 @@ class EditResponse(WafflehausBase):
 
     @wsgify
     def __call__(self, req):
-        """Returns a response if processed or an app if skipped"""
+        """Returns a response if processed or an app if skipped."""
         super(EditResponse, self).__call__(req)
         resp = None
 
