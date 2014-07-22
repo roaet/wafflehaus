@@ -29,8 +29,8 @@ class EditResponse(WafflehausBase):
         self.resources = {}
         filters = conf.get('filters')
         if filters is None:
-            self.log.warning("EditResponse waffle could not find any filters in"
-                             " its configuration")
+            self.log.warning("EditResponse waffle could not find any filters"
+                             " in its configuration")
             return
         for resource_filter in filters.split():
             if resource_filter in self.resources.keys():
@@ -44,14 +44,14 @@ class EditResponse(WafflehausBase):
         return
 
     def _change_attribs(self, req, resp, resource):
-        # This could be considerably better. Recursion, bleh.
+        # Not sure recursion is the way here...
         def walk_keys(data, level=0):
             for key, value in data.items():
                 if key == resource['key']:
                     if resource['value'] is not None:
-                        self.log.debug('Replacing "{0}": "{1}" with '
-                                       '"{0}": "{2}"'.format(key, value,
-                                       resource['value']))
+                        self.log.debug('Replacing "{0}": "{1}" with "{0}":'
+                                       '"{2}"'.format(key, value,
+                                                      resource['value']))
                         data[key] = resource['value']
                     else:
                         del(data[key])
@@ -74,18 +74,19 @@ class EditResponse(WafflehausBase):
 
         if not self.enabled:
             return self.app
-        if hasattr(self, "resources"): 
+        if hasattr(self, "resources"):
             for resource_filter in self.resources.keys():
-                if rf.matched_request(req, 
-                        self.resources[resource_filter]["resource"]):
+                if rf.matched_request(
+                        req, self.resources[resource_filter]["resource"]):
                     if resp is None:
                         resp = req.get_response(self.app)
-                    resp = self._change_attribs(req, resp, 
-                        self.resources[resource_filter])
-        if resp is None: 
+                    resp = self._change_attribs(
+                        req, resp, self.resources[resource_filter])
+        if resp is None:
             return self.app
         else:
             return resp
+
 
 def filter_factory(global_conf, **local_conf):
     """Returns a WSGI filter app for use with paste.deploy."""

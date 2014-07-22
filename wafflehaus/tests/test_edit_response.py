@@ -15,21 +15,21 @@
 
 import json
 
-import mock
 import webob
 
 from wafflehaus import edit_response
 from wafflehaus import tests
+
 
 class TestEditResponse(tests.TestCase):
     def setUp(self):
         super(TestEditResponse, self).setUp()
         self.app = self._fake_app
         self.body = {"result":
-                        {"passcode": "123password",
-                         "combination": "1,2,3,4",
-                         "secret": "no pants",
-                         "recipe": "raw chicken, razzle dazzle"}}
+                     {"passcode": "123password",
+                      "combination": "1,2,3,4",
+                      "secret": "no pants",
+                      "recipe": "raw chicken, razzle dazzle"}}
         self.combo_conf = {"enabled": "true",
                            "filters": "safe secret",
                            "safe_resource": "POST /data",
@@ -47,8 +47,6 @@ class TestEditResponse(tests.TestCase):
                             "secret_key": "recipe",
                             "secret_value": "REDACTED"}
 
-                     
-
     @webob.dec.wsgify
     def _fake_app(self, req):
         return webob.Response(body=json.dumps(self.body), status=200)
@@ -61,7 +59,7 @@ class TestEditResponse(tests.TestCase):
         self.assertTrue(callable(test_filter))
 
     def test_disabled_filter(self):
-        conf = {"enabled":"false"}
+        conf = {"enabled": "false"}
         test_filter = edit_response.filter_factory(conf)(self.app)
         resp = test_filter(webob.Request.blank("/cheeseburger", method="GET"))
 
@@ -107,7 +105,7 @@ class TestEditResponse(tests.TestCase):
 
     def test_url_garbage(self):
         test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
-        resp1 = test_filter(webob.Request.blank("/gibberish/data", 
+        resp1 = test_filter(webob.Request.blank("/gibberish/data",
                                                 method="POST"))
         resp2 = test_filter(webob.Request.blank("/hacks?stuff=/data",
                                                 method="POST"))
@@ -120,8 +118,9 @@ class TestEditResponse(tests.TestCase):
 
     def test_attrib_case_sensitivity(self):
         app_body = {"results":
-                        {"Combination": "DONT LOOK",
-                         "SECRET": "<encrypted text>"}}
+                    {"Combination": "DONT LOOK",
+                     "SECRET": "<encrypted text>"}}
+
         @webob.dec.wsgify
         def app(req):
             return webob.Response(body=json.dumps(app_body), status=200)
