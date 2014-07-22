@@ -25,14 +25,28 @@ class TestEditResponse(tests.TestCase):
     def setUp(self):
         super(TestEditResponse, self).setUp()
         self.app = self._fake_app
-        self.body = {"OK": "I'm a lumberjack"}
+        self.body = {"result":
+                        {"passcode": "123password",
+                         "combination": "1,2,3,4",
+                         "secret": "no pants",
+                         "recipe": "raw chicken, razzle dazzle"}}
         self.conf = {"enabled": "true",
-                     "filters": "secret, super_secret",
-                     "secret_resource": "GET /sauce",
-                     "secret_key": "recipe",
-                     "secret_value": "REDACTED",
-                     "super_secret_resource": "GET /sauce",
-                     "super_secret_key": "passcode"}
+                     "filters": "safe, secret",
+                     "safe_resource": "POST /data",
+                     "safe_key": "combination",
+                     "safe_value": "REDACTED",
+                     "secret_resource": "GET /data",
+                     "secret_key": "secret"}
+        self.delete_conf = {"enabled": "true",
+                            "filters": "super_secret",
+                            "super_secret_resource": "PUT /secrets",
+                            "super_secret_key": "passcode"}
+        self.redact_conf = {"enabled": "true",
+                            "filters": "secret",
+                            "secret_resource": "GET /sauce",
+                            "secret_key": "recipe",
+                            "secret_value": "REDACTED"}
+
                      
 
     @webob.dec.wsgify
@@ -45,3 +59,33 @@ class TestEditResponse(tests.TestCase):
         self.assertIsNotNone(test_filter)
         self.assertIsInstance(test_filter, edit_response.EditResponse)
         self.assertTrue(callable(test_filter))
+
+    def test_disabled_filter(self):
+        conf = {"enabled":"false"}
+        test_filter = edit_response.filter_factory(conf)(self.app)
+        resp = test_filter(webob.Request.blank("/cheeseburger", method="GET"))
+
+        self.assertEqual(resp, self.app)
+
+    def test_attrib_rename(self):
+        test_filter = edit_response.filter_factory(self.redact_conf)(self.app)
+        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+        new_body = self.body
+        new_body["result"]["recipe"] = "REDACTED"
+
+        self.assertEqual(resp.body, json.dumps(new_body))
+
+    def test_attrib_deletion(self):
+        pass
+
+    def test_attrib_combo(self):
+        pass
+
+    def test_resource_with_alternate_methods(self):
+        pass
+
+    def test_garbage(self):
+        pass
+
+    def test_case_sensitivity(self):
+        pass

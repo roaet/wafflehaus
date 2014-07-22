@@ -36,22 +36,20 @@ class EditResponse(WafflehausBase):
             self.resources[resource_filter] = {
                 "resource": rf.parse_resources(
                     conf.get("%s_resource" % resource_filter)),
-                "attribute": conf.get("%s_key" % resource_filter),
+                "key": conf.get("%s_key" % resource_filter),
                 "value": conf.get("%s_value" % resource_filter)}
         return
 
-    def _change_attribs(self, req, resp):
-        resp_body = resp.json
-
+    def _change_attribs(self, req, resp, resource):
         # This could be considerably better. Recursion, bleh.
         def walk_keys(data, level=0):
             for key, value in data.items():
-                if key in self.resource.keys():
-                    if resource[key]['value'] is not None:
+                if key == resource['key']:
+                    if resource['value'] is not None:
                         self.log.debug('Replacing "{0}": "{1}" with '
                                        '"{0}": "{2}"'.format(key, value,
-                                       self.resource[key]['value']))
-                        data[key] = self.resource[key]['value']
+                                       resource['value']))
+                        data[key] = resource['value']
                     else:
                         del(data[key])
                 else:
@@ -60,6 +58,9 @@ class EditResponse(WafflehausBase):
                         data[key] = walk_keys(value, level=level)
             return data
 
+        new_body = resp.json
+        new_body = walk_keys(new_body)
+        resp.body = json.dumps(new_body)
         return resp
 
     @wsgify
@@ -72,7 +73,8 @@ class EditResponse(WafflehausBase):
                 if rf.matched_request(req, 
                         self.resources[resource_filter]["resource"]):
                     resp = req.get_response(self.app)
-                    resp = self._change_attribs(req, resp)
+                    resp = self._change_attribs(req, resp, 
+                        self.resources[resource_filter])
         return resp
 
 
