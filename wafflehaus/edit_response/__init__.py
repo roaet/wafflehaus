@@ -25,14 +25,17 @@ class EditResponse(WafflehausBase):
     def __init__(self, app, conf):
         super(EditResponse, self).__init__(app, conf)
         self.log.name = conf.get('log_name', __name__)
-        self.log.info('Starting wafflehaus edit attributes middleware')
+        self.log.info('Starting wafflehaus edit_response middleware')
         self.resources = {}
         filters = conf.get('filters')
         if filters is None:
             self.log.warning("EditResponse waffle could not find any filters in"
-                             " it's configuration.")
+                             " its configuration")
             return
         for resource_filter in filters.split():
+            if resource_filter in self.resources.keys():
+                self.log.warning("EditResponse waffle found two filter names "
+                                 "with the same name (first now overridden")
             self.resources[resource_filter] = {
                 "resource": rf.parse_resources(
                     conf.get("%s_resource" % resource_filter)),
@@ -66,17 +69,23 @@ class EditResponse(WafflehausBase):
     @wsgify
     def __call__(self, req):
         """Returns a response if processed or an app if skipped"""
+        super(EditResponse, self).__call__(req)
+        resp = None
+
         if not self.enabled:
             return self.app
         if hasattr(self, "resources"): 
             for resource_filter in self.resources.keys():
                 if rf.matched_request(req, 
                         self.resources[resource_filter]["resource"]):
-                    resp = req.get_response(self.app)
+                    if resp is None:
+                        resp = req.get_response(self.app)
                     resp = self._change_attribs(req, resp, 
                         self.resources[resource_filter])
-        return resp
-
+        if resp is None: 
+            return self.app
+        else:
+            return resp
 
 def filter_factory(global_conf, **local_conf):
     """Returns a WSGI filter app for use with paste.deploy."""

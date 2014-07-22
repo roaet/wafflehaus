@@ -30,13 +30,13 @@ class TestEditResponse(tests.TestCase):
                          "combination": "1,2,3,4",
                          "secret": "no pants",
                          "recipe": "raw chicken, razzle dazzle"}}
-        self.conf = {"enabled": "true",
-                     "filters": "safe, secret",
-                     "safe_resource": "POST /data",
-                     "safe_key": "combination",
-                     "safe_value": "REDACTED",
-                     "secret_resource": "GET /data",
-                     "secret_key": "secret"}
+        self.combo_conf = {"enabled": "true",
+                           "filters": "safe secret",
+                           "safe_resource": "POST /data",
+                           "safe_key": "combination",
+                           "safe_value": "REDACTED",
+                           "secret_resource": "POST /data",
+                           "secret_key": "secret"}
         self.delete_conf = {"enabled": "true",
                             "filters": "super_secret",
                             "super_secret_resource": "PUT /secrets",
@@ -54,7 +54,7 @@ class TestEditResponse(tests.TestCase):
         return webob.Response(body=json.dumps(self.body), status=200)
 
     def test_filter_creation(self):
-        test_filter = edit_response.filter_factory(self.conf)(self.app)
+        test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
 
         self.assertIsNotNone(test_filter)
         self.assertIsInstance(test_filter, edit_response.EditResponse)
@@ -74,18 +74,58 @@ class TestEditResponse(tests.TestCase):
         new_body["result"]["recipe"] = "REDACTED"
 
         self.assertEqual(resp.body, json.dumps(new_body))
+        self.assertEqual(resp.status_code, 200)
 
     def test_attrib_deletion(self):
-        pass
+        test_filter = edit_response.filter_factory(self.delete_conf)(self.app)
+        resp = test_filter(webob.Request.blank("/secrets", method="PUT"))
+        new_body = self.body
+        del(new_body['result']['passcode'])
+
+        self.assertEqual(resp.body, json.dumps(new_body))
+        self.assertEqual(resp.status_code, 200)
 
     def test_attrib_combo(self):
-        pass
+        test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
+        resp = test_filter(webob.Request.blank("/data", method="POST"))
+        new_body = self.body
+        new_body['result']['combination'] = 'REDACTED'
+        del(new_body['result']['secret'])
+
+        self.assertEqual(resp.body, json.dumps(new_body))
+        self.assertEqual(resp.status_code, 200)
 
     def test_resource_with_alternate_methods(self):
-        pass
+        test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
+        put_resp = test_filter(webob.Request.blank("/data", method="PUT"))
+        get_resp = test_filter(webob.Request.blank("/data", method="GET"))
+        head_resp = test_filter(webob.Request.blank("/data", method="HEAD"))
 
-    def test_garbage(self):
-        pass
+        self.assertEqual(put_resp, self.app)
+        self.assertEqual(get_resp, self.app)
+        self.assertEqual(head_resp, self.app)
 
-    def test_case_sensitivity(self):
-        pass
+    def test_url_garbage(self):
+        test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
+        resp1 = test_filter(webob.Request.blank("/gibberish/data", 
+                                                method="POST"))
+        resp2 = test_filter(webob.Request.blank("/hacks?stuff=/data",
+                                                method="POST"))
+        resp3 = test_filter(webob.Request.blank("/stuffanddata",
+                                                method="POST"))
+
+        self.assertEqual(resp1, self.app)
+        self.assertEqual(resp2, self.app)
+        self.assertEqual(resp3, self.app)
+
+    def test_attrib_case_sensitivity(self):
+        app_body = {"results":
+                        {"Combination": "DONT LOOK",
+                         "SECRET": "<encrypted text>"}}
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+        test_filter = edit_response.filter_factory(self.combo_conf)(app)
+        resp = test_filter(webob.Request.blank("/data", method="POST"))
+
+        self.assertEqual(resp.body, json.dumps(app_body))
