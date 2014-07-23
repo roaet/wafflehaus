@@ -45,20 +45,24 @@ class EditResponse(WafflehausBase):
 
     def _change_attribs(self, req, resp, resource):
         # Not sure recursion is the way here...
-        def walk_keys(data, level=0):
-            for key, value in data.items():
-                if key == resource['key']:
-                    if resource['value'] is not None:
-                        self.log.debug('Replacing "{0}": "{1}" with "{0}":'
-                                       '"{2}"'.format(key, value,
-                                                      resource['value']))
-                        data[key] = resource['value']
+        def walk_keys(data):
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    if key == resource['key']:
+                        if resource['value'] is not None:
+                            self.log.debug('Replacing "{0}":"{1}" with "{0}"'
+                                           ':"{2}"'.format(key, value,
+                                                           resource['value']))
+                            data[key] = resource['value']
+                        else:
+                            del(data[key])
+                            self.log.debug('Deleting "{0}":"{1}" from the '
+                                           'response'.format(key, value))
                     else:
-                        del(data[key])
-                else:
-                    if isinstance(value, dict):
-                        level += 1
-                        data[key] = walk_keys(value, level=level)
+                        if isinstance(value, dict) or isinstance(value, list):
+                            data[key] = walk_keys(value)
+            elif isinstance(data, list):
+                    data = [walk_keys(part) for part in data]
             return data
 
         new_body = resp.json

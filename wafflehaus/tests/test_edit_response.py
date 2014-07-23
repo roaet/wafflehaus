@@ -48,8 +48,10 @@ class TestEditResponse(tests.TestCase):
                             "secret_value": "REDACTED"}
 
     @webob.dec.wsgify
-    def _fake_app(self, req):
-        return webob.Response(body=json.dumps(self.body), status=200)
+    def _fake_app(self, req, body=None):
+        if body is None:
+            body = self.body
+        return webob.Response(body=json.dumps(body), status=200)
 
     def test_filter_creation(self):
         test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
@@ -124,7 +126,33 @@ class TestEditResponse(tests.TestCase):
         @webob.dec.wsgify
         def app(req):
             return webob.Response(body=json.dumps(app_body), status=200)
+
         test_filter = edit_response.filter_factory(self.combo_conf)(app)
         resp = test_filter(webob.Request.blank("/data", method="POST"))
 
         self.assertEqual(resp.body, json.dumps(app_body))
+
+    def test_nested_lists_and_dicts(self):
+        app_body = {"results":
+                    [{"some": "here"},
+                     {"some": "there"},
+                     ["random_string",
+                      {"secret": "MY SECRETS",
+                       "nested":
+                        {"combination": "1,2,3,4"}}]]}
+        processed_body = {"results":
+                          [{"some": "here"},
+                           {"some": "there"},
+                            ["random_string",
+                            {"nested":
+                              {"combination": "REDACTED"}}]]}
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+
+        test_filter = edit_response.filter_factory(self.combo_conf)(app)
+        resp = test_filter(webob.Request.blank("/data", method="POST"))
+
+        self.assertEqual(resp.body, json.dumps(processed_body))
+
