@@ -139,13 +139,13 @@ class TestEditResponse(tests.TestCase):
                      ["random_string",
                       {"secret": "MY SECRETS",
                        "nested":
-                        {"combination": "1,2,3,4"}}]]}
+                       {"combination": "1,2,3,4"}}]]}
         processed_body = {"results":
                           [{"some": "here"},
                            {"some": "there"},
-                            ["random_string",
+                           ["random_string",
                             {"nested":
-                              {"combination": "REDACTED"}}]]}
+                             {"combination": "REDACTED"}}]]}
 
         @webob.dec.wsgify
         def app(req):
@@ -155,4 +155,3 @@ class TestEditResponse(tests.TestCase):
         resp = test_filter(webob.Request.blank("/data", method="POST"))
 
         self.assertEqual(resp.body, json.dumps(processed_body))
-
