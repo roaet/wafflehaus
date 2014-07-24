@@ -28,6 +28,7 @@ class ContextFilter(wafflehaus.base.WafflehausBase):
         self.strat = conf.get('context_strategy')
         if self.strat is None:
             self.log.info('No context context is configured')
+        self.req_auth = conf.get('require_auth_info')
 
     def _import_class(self, name):
         last_dot = name.rfind(".")
@@ -50,8 +51,10 @@ class ContextFilter(wafflehaus.base.WafflehausBase):
             else:
                 self.log.error("Failed to find strategy: %s" % self.strat)
         if not self.testing:
-            self.strat_instance = kls(self.context_key)
-            self.strat_instance.load_context(req)
+            self.strat_instance = kls(self.context_key, req_auth=self.req_auth)
+            result = self.strat_instance.load_context(req)
+            if not result:
+                return webob.exc.HTTPForbidden()
         return self.app
 
     @webob.dec.wsgify
@@ -65,11 +68,12 @@ class ContextFilter(wafflehaus.base.WafflehausBase):
 
 class BaseContextStrategy(object):
 
-    def __init__(self, key):
+    def __init__(self, key, req_auth=False):
         self.key = key
+        self.require_auth_info = req_auth
 
     def load_context(self, req):
-        pass
+        return True
 
 
 def filter_factory(global_conf, **local_conf):

@@ -20,11 +20,17 @@ from wafflehaus.try_context import context_filter
 
 
 class TestContextClass(context_filter.BaseContextStrategy):
-    def __init__(self, key):
-        super(TestContextClass, self).__init__(key)
+    def __init__(self, key, req_auth=False):
+        super(TestContextClass, self).__init__(key, req_auth)
         self._mockme()
+        if req_auth:
+            self._auth_required()
 
     def _mockme(self):
+        """Exists because one can't mock __init__."""
+        pass
+
+    def _auth_required(self):
         """Exists because one can't mock __init__."""
         pass
 
@@ -38,6 +44,12 @@ class TestTryContext(tests.TestCase):
         self.start_response = mock.Mock()
         self.test_cls = "wafflehaus.tests.test_try_context.TestContextClass"
         self.context_init = self.create_patch(self.test_cls + '._mockme')
+        self.auth_check = self.create_patch(self.test_cls + '._auth_required')
+
+        self.strat_test_auth = {"context_strategy": self.test_cls,
+                                'enabled': 'true',
+                                'require_auth_info': True,
+                                "context_key": "context.test", }
 
         self.strat_test = {"context_strategy": self.test_cls,
                            'enabled': 'true',
@@ -66,6 +78,19 @@ class TestTryContext(tests.TestCase):
         resp = result.__call__.request('/something', method='HEAD')
         self.assertEqual(self.app, resp)
         self.assertEqual(1, self.context_init.call_count)
+        self.assertEqual(0, self.auth_check.call_count)
+        self.assertTrue(isinstance(result, context_filter.ContextFilter))
+        """Should be 1 because of a new instance."""
+        self.assertEqual(1, self.context_init.call_count)
+
+    def test_create_strategy_test_required_auth(self):
+        """This is a test strategy to see if this thing works."""
+        result = context_filter.filter_factory(self.strat_test_auth)(self.app)
+        self.assertTrue(isinstance(result, context_filter.ContextFilter))
+        resp = result.__call__.request('/something', method='HEAD')
+        self.assertEqual(self.app, resp)
+        self.assertEqual(1, self.context_init.call_count)
+        self.assertEqual(1, self.auth_check.call_count)
         self.assertTrue(isinstance(result, context_filter.ContextFilter))
         """Should be 1 because of a new instance."""
         self.assertEqual(1, self.context_init.call_count)
