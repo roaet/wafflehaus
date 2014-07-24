@@ -73,7 +73,7 @@ class TestEditResponse(tests.TestCase):
         new_body = self.body
         new_body["result"]["recipe"] = "REDACTED"
 
-        self.assertEqual(resp.body, json.dumps(new_body))
+        self.assertEqual(resp.json, new_body)
         self.assertEqual(resp.status_code, 200)
 
     def test_attrib_deletion(self):
@@ -82,7 +82,7 @@ class TestEditResponse(tests.TestCase):
         new_body = self.body
         del(new_body['result']['passcode'])
 
-        self.assertEqual(resp.body, json.dumps(new_body))
+        self.assertEqual(resp.json, new_body)
         self.assertEqual(resp.status_code, 200)
 
     def test_attrib_combo(self):
@@ -92,7 +92,7 @@ class TestEditResponse(tests.TestCase):
         new_body['result']['combination'] = 'REDACTED'
         del(new_body['result']['secret'])
 
-        self.assertEqual(resp.body, json.dumps(new_body))
+        self.assertEqual(resp.json, new_body)
         self.assertEqual(resp.status_code, 200)
 
     def test_resource_with_alternate_methods(self):
@@ -130,7 +130,7 @@ class TestEditResponse(tests.TestCase):
         test_filter = edit_response.filter_factory(self.combo_conf)(app)
         resp = test_filter(webob.Request.blank("/data", method="POST"))
 
-        self.assertEqual(resp.body, json.dumps(app_body))
+        self.assertEqual(resp.json, app_body)
 
     def test_nested_lists_and_dicts(self):
         app_body = {"results":
@@ -154,4 +154,4 @@ class TestEditResponse(tests.TestCase):
         test_filter = edit_response.filter_factory(self.combo_conf)(app)
         resp = test_filter(webob.Request.blank("/data", method="POST"))
 
-        self.assertEqual(resp.body, json.dumps(processed_body))
+        self.assertEqual(resp.json, processed_body)
