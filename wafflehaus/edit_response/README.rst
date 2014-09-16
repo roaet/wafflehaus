@@ -11,22 +11,27 @@ Configuration
 ::
 
     [filter:edit_response]
-    paste.filter_factory = wafflehaus.neutron.edit_response:filter_factory
+    paste.filter_factory = wafflehaus.edit_response:filter_factory
     enabled = true
 
 Optional Definitions
 
-::
-    # Filter names can be abitrary, but must match on resource and attrib key
-    # names
+#. Filter names can be abitrary, but must match on resource and attrib key names ::
+
     filters = network port
-    # Associated resource method and path
+
+#. Associated resource method and path ::
+
     network_resource = GET POST PUT /v2.0/networks
     port_resource = GET POST PUT /v2.0/ports
-    # Associated attribute name (Defaults to delete, unless a value given below)
+
+#. Associated attribute name (Defaults to delete, unless a value given below) ::
+
     network_key = bridge
     port_key = ipam_strategy
-    # New value for attribute, if desired (if omitted, attribute is deleted)
+
+#. New value for attribute, if desired (if omitted, attribute is deleted) ::
+
     network_value = strawberry
     port_value = chocolate
 
