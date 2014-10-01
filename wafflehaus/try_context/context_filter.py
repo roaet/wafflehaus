@@ -28,7 +28,7 @@ class ContextFilter(wafflehaus.base.WafflehausBase):
         self.strat = conf.get('context_strategy')
         if self.strat is None:
             self.log.info('No context context is configured')
-        self.req_auth = conf.get('require_auth_info')
+        self.req_auth = conf.get('require_auth_info') in self.truths
 
     def _import_class(self, name):
         last_dot = name.rfind(".")
