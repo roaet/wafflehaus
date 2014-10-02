@@ -43,6 +43,15 @@ class EditResponse(WafflehausBase):
                 "value": conf.get("%s_value" % resource_filter)}
         return
 
+    def _replace_lookup(self, replace_str):
+        if replace_str == '[]':
+            return []
+        if replace_str.lower() == 'null' or replace_str.lower() == 'none':
+            return None
+        if replace_str == '{}':
+            return {}
+        return replace_str
+
     def _change_attribs(self, req, resp, resource):
         # Not sure recursion is the way here...
         def walk_keys(data):
@@ -50,10 +59,11 @@ class EditResponse(WafflehausBase):
                 for key, value in data.items():
                     if key == resource['key']:
                         if resource['value'] is not None:
+                            replace = self._replace_lookup(resource['value'])
                             self.log.debug('Replacing "{0}":"{1}" with "{0}"'
                                            ':"{2}"'.format(key, value,
                                                            resource['value']))
-                            data[key] = resource['value']
+                            data[key] = replace
                         else:
                             del(data[key])
                             self.log.debug('Deleting "{0}":"{1}" from the '

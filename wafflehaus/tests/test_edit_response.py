@@ -46,6 +46,16 @@ class TestEditResponse(tests.TestCase):
                             "secret_resource": "GET /sauce",
                             "secret_key": "recipe",
                             "secret_value": "REDACTED"}
+        self.make_empty = {"enabled": "true",
+                           "filters": "result",
+                           "result_resource": "GET /sauce",
+                           "result_key": "result",
+                           "result_value": "[]"}
+        self.make_null = {"enabled": "true",
+                          "filters": "result",
+                          "result_resource": "GET /sauce",
+                          "result_key": "result",
+                          "result_value": "NULL"}
 
     @webob.dec.wsgify
     def _fake_app(self, req, body=None):
@@ -83,6 +93,24 @@ class TestEditResponse(tests.TestCase):
         del(new_body['result']['passcode'])
 
         self.assertEqual(resp.json, new_body)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_make_empty(self):
+        test_filter = edit_response.filter_factory(self.make_empty)(self.app)
+        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+        new_body = json.dumps(dict(result=[]))
+        resp_json = json.dumps(json.loads(resp.body))
+
+        self.assertEqual(resp_json, new_body)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_make_null(self):
+        test_filter = edit_response.filter_factory(self.make_null)(self.app)
+        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+        new_body = json.dumps(dict(result=None))
+        resp_json = json.dumps(json.loads(resp.body))
+
+        self.assertEqual(resp_json, new_body)
         self.assertEqual(resp.status_code, 200)
 
     def test_attrib_combo(self):
