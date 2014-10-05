@@ -72,7 +72,7 @@ class RoleRouter(wafflehaus.base.WafflehausBase):
             return self.routes["default"]
 
         roles = context.roles
-        for key in self.roles.keys():
+        for key in sorted(self.roles.keys()):
             if key in roles:
                 return self.routes[self.roles[key]]
 
