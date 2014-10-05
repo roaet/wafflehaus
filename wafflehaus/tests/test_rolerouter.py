@@ -132,3 +132,27 @@ class TestRoleRouter(tests.TestCase):
                                            **self.local_conf)
         result = rr(req)
         self.assertEqual(result, "cat_filter")
+
+    def test_ordering_multiple_roles_different_route_returns_cat_filter(self):
+        context = mock.Mock()
+        context.roles = ["domestic", "mutt"]
+
+        req = mock.Mock()
+        req.environ = {"nova.context": context}
+
+        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
+                                           **self.local_conf)
+        result = rr(req)
+        self.assertEqual(result, "cat_filter")
+
+    def test_ordering_multiple_roles_different_route_returns_dog_filter(self):
+        context = mock.Mock()
+        context.roles = ["mutt", "outdoor"]
+
+        req = mock.Mock()
+        req.environ = {"nova.context": context}
+
+        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
+                                           **self.local_conf)
+        result = rr(req)
+        self.assertEqual(result, "dog_filter")
