@@ -145,7 +145,7 @@ class TestRoleRouter(tests.TestCase):
         result = rr(req)
         self.assertEqual(result, "cat_filter")
 
-    def test_ordering_multiple_roles_different_route_returns_dog_filter(self):
+    def test_ordering_of_roles_does_not_matter(self):
         context = mock.Mock()
         context.roles = ["mutt", "outdoor"]
 
@@ -155,4 +155,4 @@ class TestRoleRouter(tests.TestCase):
         rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                            **self.local_conf)
         result = rr(req)
-        self.assertEqual(result, "dog_filter")
+        self.assertEqual(result, "cat_filter")
