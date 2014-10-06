@@ -85,3 +85,6 @@ Role Router setup::
   that the app be another composite, and even another role router.
 * The route_default on line 9 is the pipeline selected by the role router if
   none of the roles were matched. This setting is required
+
+Note: that prioritization of which route to use is based on the order that they
+are definined, where the first route is considered first
