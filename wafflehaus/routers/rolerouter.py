@@ -32,14 +32,20 @@ class RoleRouter(wafflehaus.base.WafflehausBase):
         self.context_key = conf.get('context_key', 'nova.context')
         self.roles = {}
         self.routes = {}
+        self.sorted_routes = []
+        self.route_to_role = {}
 
         # This assumes roles are labeled role_<role> in conf
         routes = conf["routes"].split()
         for route in routes:
+            self.sorted_routes.append(route)
             key = "roles_%s" % route
             if key in conf:
                 roles = conf[key].split()
                 for role in roles:
+                    if route not in self.route_to_role:
+                        self.route_to_role[route] = []
+                    self.route_to_role[route].append(role)
                     self.roles[role] = route
 
         # This returns the particular route's app after applying the filters
@@ -72,9 +78,11 @@ class RoleRouter(wafflehaus.base.WafflehausBase):
             return self.routes["default"]
 
         roles = context.roles
-        for key in sorted(self.roles.keys()):
-            if key in roles:
-                return self.routes[self.roles[key]]
+        for current_route in self.sorted_routes:
+            route_roles = self.route_to_role[current_route]
+            for role in route_roles:
+                if role in roles:
+                    return self.routes[current_route]
 
         return self.routes["default"]
 
