@@ -52,27 +52,57 @@ class EditResponse(WafflehausBase):
             return {}
         return replace_str
 
+    def _foreach(self, conditional, data):
+        if not isinstance(data, list):
+            return data
+        if not all(isinstance(item, dict) for item in data):
+            return data
+        new_data = []
+        splits = conditional.split(":", 2)
+        action = splits[1]
+        conditionals = splits[2].split(',')
+        for item in data:
+            do_action = False
+            for cond in conditionals:
+                # TODO(jlh): Probably should support more than '='
+                (target, value) = cond.split("=")
+                if target not in item:
+                    continue
+                if item.get(target) == value:
+                    do_action = True
+            if do_action:
+                if action == 'keep_if':
+                    new_data.append(item)
+            if not do_action:
+                if action == 'drop_if':
+                    new_data.append(item)
+        self.log.debug('Replacing "{0}" with :"{1}"'.format(data, new_data))
+        return new_data
+
     def _change_attribs(self, req, resp, resource):
         # Not sure recursion is the way here...
         def walk_keys(data):
             if isinstance(data, dict):
                 for key, value in data.items():
                     if key == resource['key']:
-                        if resource['value'] is not None:
+                        val = resource.get('value', None)
+                        if val is None:
+                            del(data[key])
+                            self.log.debug('Deleting "{0}":"{1}" from the '
+                                           'response'.format(key, value))
+                        elif val.startswith('foreach:'):
+                            data[key] = self._foreach(val, data[key])
+                        else:
                             replace = self._replace_lookup(resource['value'])
                             self.log.debug('Replacing "{0}":"{1}" with "{0}"'
                                            ':"{2}"'.format(key, value,
                                                            resource['value']))
                             data[key] = replace
-                        else:
-                            del(data[key])
-                            self.log.debug('Deleting "{0}":"{1}" from the '
-                                           'response'.format(key, value))
                     else:
                         if isinstance(value, dict) or isinstance(value, list):
                             data[key] = walk_keys(value)
             elif isinstance(data, list):
-                    data = [walk_keys(part) for part in data]
+                data = [walk_keys(part) for part in data]
             return data
 
         new_body = resp.json

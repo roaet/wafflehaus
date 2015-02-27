@@ -56,6 +56,16 @@ class TestEditResponse(tests.TestCase):
                           "result_resource": "GET /sauce",
                           "result_key": "result",
                           "result_value": "NULL"}
+        self.keep_if = {"enabled": "true",
+                        "filters": "result",
+                        "result_resource": "GET /sauce",
+                        "result_key": "results",
+                        "result_value": "foreach:keep_if:some=here"}
+        self.drop_if = {"enabled": "true",
+                        "filters": "result",
+                        "result_resource": "GET /sauce",
+                        "result_key": "results",
+                        "result_value": "foreach:drop_if:some=here"}
 
     @webob.dec.wsgify
     def _fake_app(self, req, body=None):
@@ -69,6 +79,33 @@ class TestEditResponse(tests.TestCase):
         self.assertIsNotNone(test_filter)
         self.assertIsInstance(test_filter, edit_response.EditResponse)
         self.assertTrue(callable(test_filter))
+
+    def test_keep_if(self):
+        app_body = {"results":
+                    [{"some": "here"}, {"some": "there"}, {"derp": "derp"}]}
+        processed_body = {"results":
+                          [{"some": "there"}, {"derp": "derp"}]}
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+        test_filter = edit_response.filter_factory(self.drop_if)(app)
+        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+
+        self.assertEqual(resp.json, processed_body)
+
+    def test_drop_if(self):
+        app_body = {"results":
+                    [{"some": "here"}, {"some": "there"}, {"derp": "derp"}]}
+        processed_body = {"results": [{"some": "here"}]}
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+        test_filter = edit_response.filter_factory(self.keep_if)(app)
+        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+
+        self.assertEqual(resp.json, processed_body)
 
     def test_disabled_filter(self):
         conf = {"enabled": "false"}
