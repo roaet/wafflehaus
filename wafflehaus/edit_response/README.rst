@@ -5,6 +5,9 @@ Edit Response Attributes
 The edit_response filter is designed to add or remove certain attributes from a response
 that we may not want to show to our consumers.
 
+Using the foreach option you can choose to selectively remove items from the
+response if they pass or fail simple criteria.
+
 Configuration
 ~~~~~~~~~~~~~
 
@@ -34,6 +37,33 @@ Optional Definitions
 
     network_value = strawberry
     port_value = chocolate
+
+Using foreach
+~~~~~~~~~~~~~
+
+Foreach can be used when the response is expected to be a list of dicts.
+
+::
+
+    [filter:hide_extensions]
+    paste.filter_factory = wafflehaus.edit_response:filter_factory
+    enabled = true
+    filters = extensions
+    extensions_resource = GET /v2.0/extensions{.format}
+    extensions_key = extensions
+    extensions_value = foreach:keep_if:alias=security-group
+
+In the above configuration example if the alias attribute of an element of the
+list is equal to security-group. Any other elements will be dropped.
+
+Another element can be allowed if the criteria is expanded.
+
+::
+
+    extensions_value = foreach:keep_if:alias=security-group,alias=quotas
+
+It is also possible to drop if the criteria is met by using drop_if instead of
+keep_if.
 
 Use Case
 ~~~~~~~~
