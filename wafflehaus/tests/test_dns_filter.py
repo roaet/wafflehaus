@@ -36,7 +36,7 @@ def do_lookup_unknown(address):
     raise dns.exception.DNSException
 
 
-class FakeARecord():
+class FakeARecord(object):
 
     def __init__(self, good=True):
         if good:
@@ -45,7 +45,7 @@ class FakeARecord():
             self.rrset = ['10.0.0.1']
 
 
-class FakeResolver():
+class FakeResolver(object):
 
     def __init__(self, name=True):
         self.name = name

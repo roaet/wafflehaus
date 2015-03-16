@@ -15,6 +15,7 @@
 from routes import Mapper
 
 __all__ = ['matched_request', 'parse_resources']
+_methods = ['POST', 'GET', 'DELETE', 'PUT', 'OPTION', 'HEAD']
 
 
 def parse_resources(resources):
@@ -28,8 +29,11 @@ def parse_resources(resources):
         resource = res_split[-1]
         if resource not in result:
             result[resource] = []
-        for m in methods:
-            result[resource].append(m)
+        if len(methods) == 0:
+            result[resource].extend(_methods)
+        else:
+            for m in methods:
+                result[resource].append(m)
     return result
 
 
