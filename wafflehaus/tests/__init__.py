@@ -15,7 +15,7 @@
 
 import mock
 from mock import patch
-from oslo.config import cfg
+from oslo_config import cfg
 import unittest2
 
 
