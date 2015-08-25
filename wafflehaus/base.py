@@ -14,7 +14,7 @@
 #    under the License.
 import logging
 
-from oslo.config import cfg
+from oslo_config import cfg
 import webob.request
 
 GLOBAL_CONF = cfg.CONF
