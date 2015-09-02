@@ -121,6 +121,24 @@ Development Guidelines
 9. Do not assume any other waffle exists if you can; document if you can't
 10. Readable code is preferred over clever code
 
+Returning Exceptions
+~~~~~~~~~~~~~~~~~~~~
+The reason why exceptions are returned instead of raised is due to interactions
+with eventlet. When an exception is raised it causes eventlet to halt so it can
+process the exception.
+
+This has certain interactions with faultwrapper because it only catches
+raised exceptions. If you rely on faultwrapper then you may raise the exception
+or, if you are using a subproject that has access to it, you may do the
+following:
+
+    from nova.api.openstack import wsgi
+
+    return wsgi.Fault(your_exception)
+
+In this situation the waffle would be in the wafflehaus.nova subproject (as it
+makes use of nova libraries).
+
 Subprojects
 -----------
 
