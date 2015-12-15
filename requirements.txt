@@ -2,3 +2,4 @@ dnspython
 webob
 oslo.config
 routes
+simplejson
