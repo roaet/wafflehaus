@@ -66,6 +66,11 @@ class TestEditResponse(tests.TestCase):
                         "result_resource": "GET /sauce",
                         "result_key": "results",
                         "result_value": "foreach:drop_if:some=here"}
+        self.test_none = {"enabled": "true",
+                          "filters": "result",
+                          "result_resource": "GET /sauce/{id}",
+                          "result_key": "result",
+                          "result_value": "NULL"}
 
     @webob.dec.wsgify
     def _fake_app(self, req, body=None):
@@ -220,3 +225,14 @@ class TestEditResponse(tests.TestCase):
         resp = test_filter(webob.Request.blank("/data", method="POST"))
 
         self.assertEqual(resp.json, processed_body)
+
+    def test_none_request(self):
+        app_body = "garbage"
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=app_body, status=200)
+        test_filter = edit_response.filter_factory(self.test_none)(app)
+        resp = test_filter(webob.Request.blank("/sauce/None", method="GET"))
+
+        self.assertEqual(resp.body, app_body)

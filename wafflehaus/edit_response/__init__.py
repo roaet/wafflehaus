@@ -14,6 +14,7 @@
 #    under the License.
 
 import json
+from simplejson import JSONDecodeError
 
 from webob.dec import wsgify
 
@@ -105,9 +106,13 @@ class EditResponse(WafflehausBase):
                 data = [walk_keys(part) for part in data]
             return data
 
-        new_body = resp.json
-        new_body = walk_keys(new_body)
-        resp.body = json.dumps(new_body)
+        try:
+            new_body = resp.json
+            new_body = walk_keys(new_body)
+            resp.body = json.dumps(new_body)
+        except JSONDecodeError:
+            pass
+
         return resp
 
     @wsgify
