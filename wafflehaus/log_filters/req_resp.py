@@ -14,6 +14,7 @@
 #    under the License.
 import logging
 import time
+import uuid
 
 import webob.dec
 import webob.exc
@@ -23,29 +24,105 @@ import wafflehaus.base
 
 FAKE_REQ_ID = 'req-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
 FAKE_TENANT_ID = '-'
+DEFAULTS = {'request': FAKE_REQ_ID, 'tenant': FAKE_TENANT_ID}
 
 
 class RequestResponseLogger(wafflehaus.base.WafflehausBase):
 
+    def _get_new_log(self, name, log_file, log_format):
+        formatter = logging.Formatter(log_format)
+        fileHandler = logging.FileHandler(log_file)
+        fileHandler.setFormatter(formatter)
+
+        log = logging.getLogger(name)
+        log.handlers = []
+        log.addHandler(fileHandler)
+        log.propagate = False
+        return log
+
     def __init__(self, app, conf):
         super(RequestResponseLogger, self).__init__(app, conf)
         self.log.name = conf.get('log_name', __name__)
-        self.log_file = conf.get('log_file')
-        self.context_key = conf.get('context_key')
-        self.separator = conf.get('separator', ' ')
+        self.context_key = conf.get('context_key', 'nokey')
+        self.separator = ' '
+        self.do_detail_logs = (conf.get('do_detail') in self.truths)
+        self.detail_level = int(conf.get('detail_level', 500))
         default_format = '%(message)s' + self.separator + '%(asctime)s'
-        self.log_format = conf.get('logformat', default_format)
-        if self.log_file is not None:
-            formatter = logging.Formatter(self.log_format)
-            self.log = logging.getLogger(self.log.name)
-            self.log.handlers = []
-            fileHandler = logging.FileHandler(self.log_file)
-            fileHandler.setFormatter(formatter)
-            self.log.addHandler(fileHandler)
-            self.log.propagate = False
+        log_format = default_format
+        log_file = conf.get('log_file')
+
+        if log_file is not None:
+            self.log = self._get_new_log(self.log.name, log_file, log_format)
             self.log.info('Starting wafflehaus request/response logger')
+            if self.do_detail_logs:
+                dlog_file = "%s.detail.log" % log_file.replace('.log', '')
+                name = "%s.details"
+                self.dlog = self._get_new_log(name, dlog_file, '%(message)s')
         else:
             self.enabled = False
+
+    def _log_simple_request(self, req, resp, delta, log_time):
+        contents = []
+        context_info = DEFAULTS
+        ctx = req.environ.get(self.context_key)
+        if ctx is not None:
+            context_info['request'] = ctx.request_id
+            if ctx.tenant_id is not None:
+                context_info['tenant'] = ctx.tenant_id
+        id = str(uuid.uuid4())
+        if context_info['request'] != FAKE_REQ_ID:
+            id = context_info['request']
+
+        contents.append("%d" % resp.status_int)
+        contents.append("%f sec" % delta)
+        contents.append('<--')
+        contents.append(req.method)
+        qs = ""
+        if len(req.query_string) > 0:
+            qs = "?%s" % req.query_string
+        contents.append("%s%s" % (req.path, qs))
+        contents.append(context_info['request'])
+        contents.append(context_info['tenant'])
+        if self.do_detail_logs:
+            contents.append(id)
+
+        log_str = self.separator.join(contents)
+        self.log.info(log_str)
+        if resp.status_int >= self.detail_level and self.do_detail_logs:
+            self._log_detail_request(id, req, resp, delta, log_time)
+
+    def _log_detail_request(self, id, req, resp, delta, log_time):
+        context_info = DEFAULTS
+        ctx = req.environ.get(self.context_key)
+        if ctx is not None:
+            context_info['request'] = ctx.request_id
+            if ctx.tenant_id is not None:
+                context_info['tenant'] = ctx.tenant_id
+        qs = ""
+        if len(req.query_string) > 0:
+            qs = "?%s" % req.query_string
+        self.dlog.info("%s | ---" % id)
+        self.dlog.info("%s | REQTIME: %s" % (id, log_time))
+        self.dlog.info("%s | REQDIFF: %f seconds" % (id, delta))
+        self.dlog.info("%s | REQCALL: %s %s%s" % (id, req.method, req.path,
+                                                  qs))
+
+        if req.body and len(req.body) > 0:
+            body_list = req.body.split('\n')
+            for line in body_list:
+                self.dlog.info("%s | REQBODY: %s" % (id, line))
+
+        for header, value in req.headers.iteritems():
+            self.dlog.info("%s | REQHEAD: %s:%s" % (id, header, value))
+        self.dlog.info("%s | REQADDR: %s" % (id, req.remote_addr))
+
+        self.dlog.info("%s | RESTEXT: %s" % (id, resp.status))
+        self.dlog.info("%s | RESCODE: %s" % (id, resp.status_int))
+
+        if resp.body and len(resp.body) > 0:
+            body_list = resp.body.split('\n')
+            for line in body_list:
+                self.dlog.info("%s | RESBODY: %s" % (id, line))
 
     @webob.dec.wsgify
     def __call__(self, req):
@@ -55,28 +132,10 @@ class RequestResponseLogger(wafflehaus.base.WafflehausBase):
 
         start = time.time()
         resp = req.get_response(self.app)
-        end = time.time()
-        difference = (end - start)
+        difference = (time.time() - start)
 
-        request_id = FAKE_REQ_ID
-        tenant_id = 'admin'
-        contents = []
-        ctx = req.environ.get(self.context_key)
-        if ctx is not None:
-            request_id = ctx.request_id
-            if ctx.tenant_id is not None:
-                tenant_id = ctx.tenant_id
-        contents.append("%dms" % difference)
-        contents.append("%d" % resp.status_int)
-        contents.append('<--')
-        contents.append(request_id)
-        contents.append(tenant_id)
-        contents.append(req.method)
-        contents.append(req.path)
-        contents.append("(%s)" % req.query_string)
-
-        log_str = self.separator.join(contents)
-        self.log.info(log_str)
+        log_time = time.strftime("%Y-%m-%d %H:%M")
+        self._log_simple_request(req, resp, difference, log_time)
 
         if resp is None:
             return self.app
