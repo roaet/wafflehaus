@@ -83,10 +83,14 @@ class RequestResponseLogger(wafflehaus.base.WafflehausBase):
         contents.append("%s%s" % (req.path, qs))
         contents.append(context_info['request'])
         contents.append(context_info['tenant'])
+
         if self.do_detail_logs:
             contents.append(id)
 
-        log_str = self.separator.join(contents)
+        """Turn everything into a string."""
+        string_contents = [str(c) for c in contents]
+
+        log_str = self.separator.join(string_contents)
         self.log.info(log_str)
         if resp.status_int >= self.detail_level and self.do_detail_logs:
             self._log_detail_request(id, req, resp, delta, log_time)
@@ -135,7 +139,10 @@ class RequestResponseLogger(wafflehaus.base.WafflehausBase):
         difference = (time.time() - start)
 
         log_time = time.strftime("%Y-%m-%d %H:%M")
-        self._log_simple_request(req, resp, difference, log_time)
+        try:
+            self._log_simple_request(req, resp, difference, log_time)
+        except Exception as e:
+            self.log("Failed to log due to exception: %s" % e)
 
         if resp is None:
             return self.app
