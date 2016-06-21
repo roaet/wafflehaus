@@ -109,6 +109,14 @@ class EditResponse(WafflehausBase):
         try:
             new_body = resp.json
             new_body = walk_keys(new_body)
+            if 'http_status_code' in resource['key']:
+                resource_val = resource['value']
+                if resource_val.startswith('replace_if'):
+                    (status_chk, status_repl) = resource_val.split(':')[1:3]
+                    if str(resp.status_code) == status_chk:
+                        self.log.debug('Replacing http status code "{0}" with '
+                                       '"{1}"'.format(status_chk, status_repl))
+                        resp.status_code = int(status_repl)
             resp.body = json.dumps(new_body)
         except JSONDecodeError:
             pass
