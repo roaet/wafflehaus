@@ -65,6 +65,28 @@ Another element can be allowed if the criteria is expanded.
 It is also possible to drop if the criteria is met by using drop_if instead of
 keep_if.
 
+Using http_status_code->replace_if
+~~~~~~~~~~~~~
+
+This can be used to replace an http status code with a different code.
+
+::
+
+    [filter:edit_response]
+    paste.filter_factory = wafflehaus.edit_response:filter_factory
+    enabled = true
+    filters = http_filter
+    http_filter_resource = POST /v2.0/resource
+    http_filter_key = http_status_code
+    http_filter_value = replace_if:200:201
+
+In the above example, a specific request type may return a 200 where it should
+return a 201. replace_if:<status_code_match>:<status_code_to_replace> will
+verify that the actual response status returned from the target resource was a 
+200 before it will replace that http status code with a 201.
+
+Each request type for a given resource must have its own filter.
+
 Use Case
 ~~~~~~~~
 

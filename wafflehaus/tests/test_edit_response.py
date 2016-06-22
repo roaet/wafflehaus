@@ -236,3 +236,71 @@ class TestEditResponse(tests.TestCase):
         resp = test_filter(webob.Request.blank("/sauce/None", method="GET"))
 
         self.assertEqual(resp.body, app_body)
+
+    def test_http_status_replace_get(self):
+        app_body = {"garbage": {"garbage": "here"}}
+
+        test_status = {"enabled": "true",
+                       "filters": "httpget",
+                       "httpget_resource": "GET /sauce",
+                       "httpget_key": "http_status_code",
+                       "httpget_value": "replace_if:200:201"}
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+        test_filter = edit_response.filter_factory(test_status)(app)
+
+        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+        self.assertEqual(resp.status_code, 201, resp)
+
+    def test_http_status_replace_post(self):
+        app_body = {"garbage": {"garbage": "here"}}
+
+        test_status = {"enabled": "true",
+                       "filters": "httppost",
+                       "httppost_resource": "POST /sauce",
+                       "httppost_key": "http_status_code",
+                       "httppost_value": "replace_if:200:201"}
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+        test_filter = edit_response.filter_factory(test_status)(app)
+
+        resp = test_filter(webob.Request.blank("/sauce", method="POST"))
+        self.assertEqual(resp.status_code, 201, resp)
+
+    def test_http_status_replace_put(self):
+        app_body = {"garbage": {"garbage": "here"}}
+
+        test_status = {"enabled": "true",
+                       "filters": "httpput",
+                       "httpput_resource": "PUT /sauce/{id}",
+                       "httpput_key": "http_status_code",
+                       "httpput_value": "replace_if:200:201"}
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+        test_filter = edit_response.filter_factory(test_status)(app)
+
+        resp = test_filter(webob.Request.blank("/sauce/id", method="PUT"))
+        self.assertEqual(resp.status_code, 201, resp)
+
+    def test_http_status_replace_delete(self):
+        app_body = {"garbage": {"garbage": "here"}}
+
+        test_status = {"enabled": "true",
+                       "filters": "httpdelete",
+                       "httpdelete_resource": "DELETE /sauce/{id}",
+                       "httpdelete_key": "http_status_code",
+                       "httpdelete_value": "replace_if:200:201"}
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+        test_filter = edit_response.filter_factory(test_status)(app)
+
+        resp = test_filter(webob.Request.blank("/sauce/id", method="DELETE"))
+        self.assertEqual(resp.status_code, 201, resp)
