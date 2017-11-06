@@ -20,6 +20,9 @@ import webob
 from wafflehaus.pagination import pagination
 from wafflehaus import tests
 
+"""Replaces the 'localhost' string in the pagination URL with a
+provided static pagination URL from the config file"""
+
 
 class TestPagination(tests.TestCase):
     def setUp(self):
@@ -27,7 +30,11 @@ class TestPagination(tests.TestCase):
         self.url = 'http://rewritten_url:1337'
 
     def test_paginate_networks(self):
-        """Tests handling pagination url on networks request"""
+        """Tests handling pagination url on networks request, the url gets
+
+        replaced with self.url
+        """
+
         body = {
             "networks": [
                 {"id": "XXX", "name": "name1"}],
@@ -72,7 +79,11 @@ class TestPagination(tests.TestCase):
         self.assertEqual(resp.json, result)
 
     def test_paginate_security_groups(self):
-        """Tests handling pagination url on security-groups request"""
+        """Tests handling pagination url on security-groups request, the url
+
+        gets replaced with self.url for a security group creation request
+        """
+
         body = {
             "security_groups":
             [
@@ -200,7 +211,12 @@ class TestPagination(tests.TestCase):
         self.assertEqual(resp.json, result)
 
     def test_paginate_subnets(self):
-        """Tests handling pagination url on subnets request"""
+        """Tests handling pagination url on subnets request, the url gets
+
+        replaced with self.url for a subnet creation requesti
+
+        """
+
         body = {
             "subnets": [
                 {
@@ -285,7 +301,11 @@ class TestPagination(tests.TestCase):
         self.assertEqual(resp.json, result)
 
     def test_paginate_ports(self):
-        """Tests handling pagination url on ports request"""
+        """Tests handling pagination url on ports request, the port creation
+
+        request url gets replaced by self.url
+        """
+
         body = {
             "ports": [
                 {

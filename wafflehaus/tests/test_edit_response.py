@@ -86,6 +86,23 @@ class TestEditResponse(tests.TestCase):
         self.assertTrue(callable(test_filter))
 
     def test_keep_if(self):
+        """Keep the key/value, if the conf has key value pair"""
+
+        app_body = {"results":
+                    [{"some": "here"}, {"some": "there"}, {"derp": "derp"}]}
+        processed_body = {"results": [{"some": "here"}]}
+
+        @webob.dec.wsgify
+        def app(req):
+            return webob.Response(body=json.dumps(app_body), status=200)
+        test_filter = edit_response.filter_factory(self.keep_if)(app)
+        req = webob.Request.blank('/sauce', method='GET')
+        resp = test_filter.__call__(req)
+
+        self.assertEqual(resp.json, processed_body)
+
+    def test_drop_if(self):
+        """Drop the key/value in the response if the keep_if flag is on."""
         app_body = {"results":
                     [{"some": "here"}, {"some": "there"}, {"derp": "derp"}]}
         processed_body = {"results":
@@ -96,32 +113,23 @@ class TestEditResponse(tests.TestCase):
             return webob.Response(body=json.dumps(app_body), status=200)
         test_filter = edit_response.filter_factory(self.drop_if)(app)
         resp = test_filter(webob.Request.blank("/sauce", method="GET"))
-
-        self.assertEqual(resp.json, processed_body)
-
-    def test_drop_if(self):
-        app_body = {"results":
-                    [{"some": "here"}, {"some": "there"}, {"derp": "derp"}]}
-        processed_body = {"results": [{"some": "here"}]}
-
-        @webob.dec.wsgify
-        def app(req):
-            return webob.Response(body=json.dumps(app_body), status=200)
-        test_filter = edit_response.filter_factory(self.keep_if)(app)
-        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
-
+        # comparing with the saved static response
         self.assertEqual(resp.json, processed_body)
 
     def test_disabled_filter(self):
+        """In case filter is not applied,the response should not be modified"""
         conf = {"enabled": "false"}
         test_filter = edit_response.filter_factory(conf)(self.app)
-        resp = test_filter(webob.Request.blank("/cheeseburger", method="GET"))
+        req = webob.Request.blank("/cheeseburger", method="GET")
+        resp = test_filter.__call__(req)
 
         self.assertEqual(resp, self.app)
 
     def test_attrib_rename(self):
+        """Part of the response is redacted or censored, with config param"""
         test_filter = edit_response.filter_factory(self.redact_conf)(self.app)
-        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+        req = webob.Request.blank("/sauce", method="GET")
+        resp = test_filter.__call__(req)
         new_body = self.body
         new_body["result"]["recipe"] = "REDACTED"
 
@@ -129,8 +137,10 @@ class TestEditResponse(tests.TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_attrib_deletion(self):
+        """Part of the response is deleted , so it dosen't come in response"""
         test_filter = edit_response.filter_factory(self.delete_conf)(self.app)
-        resp = test_filter(webob.Request.blank("/secrets", method="PUT"))
+        req = webob.Request.blank("/secrets", method="PUT")
+        resp = test_filter.__call__(req)
         new_body = self.body
         del(new_body['result']['passcode'])
 
@@ -138,8 +148,10 @@ class TestEditResponse(tests.TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_make_empty(self):
+        """Response is empty json all together"""
         test_filter = edit_response.filter_factory(self.make_empty)(self.app)
-        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+        req = webob.Request.blank("/sauce", method="GET")
+        resp = test_filter.__call__(req)
         new_body = json.dumps(dict(result=[]))
         resp_json = json.dumps(json.loads(resp.body))
 
@@ -147,8 +159,10 @@ class TestEditResponse(tests.TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_make_null(self):
+        """Response as None"""
         test_filter = edit_response.filter_factory(self.make_null)(self.app)
-        resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+        req = webob.Request.blank("/sauce", method="GET")
+        resp = test_filter.__call__(req)
         new_body = json.dumps(dict(result=None))
         resp_json = json.dumps(json.loads(resp.body))
 
@@ -156,20 +170,29 @@ class TestEditResponse(tests.TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_attrib_combo(self):
+        """Redacted and removed mixed together in response"""
         test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
-        resp = test_filter(webob.Request.blank("/data", method="POST"))
+        req = webob.Request.blank("/data", method="POST")
+        resp = test_filter.__call__(req)
         new_body = self.body
+        # modified key/value
         new_body['result']['combination'] = 'REDACTED'
+        # removed key/value
         del(new_body['result']['secret'])
 
         self.assertEqual(resp.json, new_body)
         self.assertEqual(resp.status_code, 200)
 
     def test_resource_with_alternate_methods(self):
+        """Different Http verbs all together"""
         test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
-        put_resp = test_filter(webob.Request.blank("/data", method="PUT"))
-        get_resp = test_filter(webob.Request.blank("/data", method="GET"))
-        head_resp = test_filter(webob.Request.blank("/data", method="HEAD"))
+        put_req = webob.Request.blank("/data", method="PUT")
+        get_req = webob.Request.blank("/data", method="GET")
+        head_req = webob.Request.blank("/data", method="HEAD")
+
+        put_resp = test_filter.__call__(put_req)
+        get_resp = test_filter.__call__(get_req)
+        head_resp = test_filter.__call__(head_req)
 
         self.assertEqual(put_resp, self.app)
         self.assertEqual(get_resp, self.app)
@@ -177,13 +200,15 @@ class TestEditResponse(tests.TestCase):
 
     def test_url_garbage(self):
         test_filter = edit_response.filter_factory(self.combo_conf)(self.app)
-        resp1 = test_filter(webob.Request.blank("/gibberish/data",
-                                                method="POST"))
-        resp2 = test_filter(webob.Request.blank("/hacks?stuff=/data",
-                                                method="POST"))
-        resp3 = test_filter(webob.Request.blank("/stuffanddata",
-                                                method="POST"))
-
+        req1 = webob.Request.blank("/gibberish/data",
+                                   method="POST")
+        resp1 = test_filter.__call__(req1)
+        req2 = webob.Request.blank("/hacks?stuff=/data",
+                                   method="POST")
+        resp2 = test_filter.__call__(req2)
+        req3 = webob.Request.blank("/stuffanddata",
+                                   method="POST")
+        resp3 = test_filter.__call__(req3)
         self.assertEqual(resp1, self.app)
         self.assertEqual(resp2, self.app)
         self.assertEqual(resp3, self.app)
@@ -198,8 +223,8 @@ class TestEditResponse(tests.TestCase):
             return webob.Response(body=json.dumps(app_body), status=200)
 
         test_filter = edit_response.filter_factory(self.combo_conf)(app)
-        resp = test_filter(webob.Request.blank("/data", method="POST"))
-
+        req = webob.Request.blank("/data", method="POST")
+        resp = test_filter.__call__(req)
         self.assertEqual(resp.json, app_body)
 
     def test_nested_lists_and_dicts(self):
@@ -222,7 +247,8 @@ class TestEditResponse(tests.TestCase):
             return webob.Response(body=json.dumps(app_body), status=200)
 
         test_filter = edit_response.filter_factory(self.combo_conf)(app)
-        resp = test_filter(webob.Request.blank("/data", method="POST"))
+        req = webob.Request.blank("/data", method="POST")
+        resp = test_filter.__call__(req)
 
         self.assertEqual(resp.json, processed_body)
 
@@ -238,6 +264,7 @@ class TestEditResponse(tests.TestCase):
         self.assertEqual(resp.body, app_body)
 
     def test_http_status_replace_get(self):
+        """In case of GET request for an api, replace eg. 200 with 201"""
         app_body = {"garbage": {"garbage": "here"}}
 
         test_status = {"enabled": "true",
@@ -252,9 +279,11 @@ class TestEditResponse(tests.TestCase):
         test_filter = edit_response.filter_factory(test_status)(app)
 
         resp = test_filter(webob.Request.blank("/sauce", method="GET"))
+
         self.assertEqual(resp.status_code, 201, resp)
 
     def test_http_status_replace_post(self):
+        """In case of POST request for an api , replace e.g. 200 with 201"""
         app_body = {"garbage": {"garbage": "here"}}
 
         test_status = {"enabled": "true",
@@ -269,9 +298,11 @@ class TestEditResponse(tests.TestCase):
         test_filter = edit_response.filter_factory(test_status)(app)
 
         resp = test_filter(webob.Request.blank("/sauce", method="POST"))
+
         self.assertEqual(resp.status_code, 201, resp)
 
     def test_http_status_replace_put(self):
+        """In case of PUT request for an api, replace 200 with 201 response"""
         app_body = {"garbage": {"garbage": "here"}}
 
         test_status = {"enabled": "true",
@@ -286,9 +317,12 @@ class TestEditResponse(tests.TestCase):
         test_filter = edit_response.filter_factory(test_status)(app)
 
         resp = test_filter(webob.Request.blank("/sauce/id", method="PUT"))
+
+        self.assertIsNotNone(resp)
         self.assertEqual(resp.status_code, 201, resp)
 
     def test_http_status_replace_delete(self):
+        """In case of DELETE request for an api, replace 200 with 201"""
         app_body = {"garbage": {"garbage": "here"}}
 
         test_status = {"enabled": "true",
@@ -301,6 +335,5 @@ class TestEditResponse(tests.TestCase):
         def app(req):
             return webob.Response(body=json.dumps(app_body), status=200)
         test_filter = edit_response.filter_factory(test_status)(app)
-
         resp = test_filter(webob.Request.blank("/sauce/id", method="DELETE"))
         self.assertEqual(resp.status_code, 201, resp)

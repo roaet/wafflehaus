@@ -17,6 +17,9 @@ import mock
 from wafflehaus.routers import rolerouter
 from wafflehaus import tests
 
+"""Based on role and route mapping in the self.local_conf in the setUp ,
+this suite works"""
+
 
 class TestRoleRouter(tests.TestCase):
     def setUp(self):
@@ -59,6 +62,7 @@ class TestRoleRouter(tests.TestCase):
                             for k in ["domestic", "outdoor", "mutt"]))
 
     def test_create_instance_with_key(self):
+
         result = rolerouter.rolerouter_factory(self.loader, self.global_conf,
                                                **self.key_conf)
         self.assertTrue(isinstance(result, rolerouter.RoleRouter))
@@ -71,88 +75,117 @@ class TestRoleRouter(tests.TestCase):
         self.assertEqual('animal.context', result.context_key)
 
     def test_call_to_domestic_role(self):
+        """Role cat map to route cat"""
         context = mock.Mock()
         context.roles = ["domestic"]
 
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
+        role_router = rolerouter.rolerouter_factory(self.loader,
+                                                    self.global_conf,
+                                                    **self.local_conf)
+        result = role_router.__call__(req)
         self.assertEqual(result, "cat_filter")
 
     def test_call_to_outdoor_role(self):
+        """Role cat map to route cat"""
         context = mock.Mock()
         context.roles = ["outdoor"]
 
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
+        role_router = rolerouter.rolerouter_factory(self.loader,
+                                                    self.global_conf,
+                                                    **self.local_conf)
+        result = role_router.__call__(req)
         self.assertEqual(result, "cat_filter")
 
     def test_call_to_mutt_role(self):
+        """Roles_dog maps to route_dog check - self.local_conf"""
         context = mock.Mock()
         context.roles = ["mutt"]
 
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
+        role_router = rolerouter.rolerouter_factory(self.loader,
+                                                    self.global_conf,
+                                                    **self.local_conf)
+        result = role_router.__call__(req)
         self.assertEqual(result, "dog_filter")
 
     def test_call_to_untracked_role(self):
+        """Untracked routes going to default route"""
         context = mock.Mock()
         context.roles = ["blah"]
 
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
+        role_router = rolerouter.rolerouter_factory(self.loader,
+                                                    self.global_conf,
+                                                    **self.local_conf)
+        result = role_router.__call__(req)
 
         # NOTE(jmeridth/roaet): this needs to be called explicitly because
         # it doesn't get called in the filter chain
         self.assertEqual(result(), "appx")
 
     def test_multiple_roles_from_same_route(self):
+        """Same route in self.local_conf - 'roles_cat': 'domestic outdoor'"""
         context = mock.Mock()
         context.roles = ["domestic", "outdoor"]
 
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
+        role_router = rolerouter.rolerouter_factory(self.loader,
+                                                    self.global_conf,
+                                                    **self.local_conf)
+        result = role_router.__call__(req)
+        # outputs to cat filter pointing to cat app
         self.assertEqual(result, "cat_filter")
 
     def test_ordering_multiple_roles_different_route_returns_cat_filter(self):
+        """From self.local_conf different routes - roles_cat , roles_dog """
         context = mock.Mock()
         context.roles = ["domestic", "mutt"]
 
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
+        role_router = rolerouter.rolerouter_factory(self.loader,
+                                                    self.global_conf,
+                                                    **self.local_conf)
+        result = role_router.__call__(req)
         self.assertEqual(result, "cat_filter")
 
     def test_ordering_of_roles_does_not_matter(self):
+        """Since ordering does not matter we request with the order reversed
+
+        in the second case
+        """
+
         context = mock.Mock()
         context.roles = ["mutt", "outdoor"]
 
         req = mock.Mock()
         req.environ = {"nova.context": context}
 
-        rr = rolerouter.rolerouter_factory(self.loader, self.global_conf,
-                                           **self.local_conf)
-        result = rr(req)
+        role_router = rolerouter.rolerouter_factory(self.loader,
+                                                    self.global_conf,
+                                                    **self.local_conf)
+        result = role_router.__call__(req)
         self.assertEqual(result, "cat_filter")
+
+        # since mock always returns the same object we are using same mock
+        # context object with roles reversed
+        context.roles = ["outdoor", "mutt"]
+        req.environ = {"nova.context": context}
+        role_router = rolerouter.rolerouter_factory(self.loader,
+                                                    self.global_conf,
+                                                    **self.local_conf)
+        rev_result = role_router.__call__(req)
+        self.assertEqual(rev_result, "cat_filter")
