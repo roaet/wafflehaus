@@ -18,12 +18,15 @@ import webob.exc
 from wafflehaus.resource_filter import alias
 from wafflehaus import tests
 
+"""Based on action in self.conf of setUp func , the responses are 30x or 40x"""
+
 
 class TestResourceFilter(tests.TestCase):
     def setUp(self):
         self.app = mock.Mock()
         self.conf1 = {'resource': '/widget', 'enabled': 'true',
                       'action': ''}
+        # 301, moved permanently, redirect requests for /widget to /cog
         self.conf2 = {'resource': '/widget', 'enabled': 'true',
                       'action': '301:/cog'}
         self.conf3 = {'resource': '/widget', 'enabled': 'true',
@@ -46,8 +49,12 @@ class TestResourceFilter(tests.TestCase):
         self.assertTrue('DELETE' in widget)
         self.assertTrue('HEAD' in widget)
         self.assertTrue('OPTION' in widget)
+        # usual behavior is bad request 400 if action is not defined
+        resp = result.__call__.request('/widget', method='POST')
+        self.assertTrue(isinstance(resp, webob.exc.HTTPBadRequest))
 
     def test_400_on_resource(self):
+        """No action hence bad request"""
         result = alias.filter_factory(self.conf1)(self.app)
         resp = result.__call__.request('/widget', method='POST')
         self.assertTrue(isinstance(resp, webob.exc.HTTPBadRequest))
@@ -76,7 +83,13 @@ class TestResourceFilter(tests.TestCase):
         self.assertEqual(self.app, resp)
 
     def test_301_on_resource(self):
+        """301 HTTP request is HTTPMovedPermanently, used for
+
+        permanent redirection
+        """
+
         result = alias.filter_factory(self.conf2)(self.app)
+        # request to /widget gets redirected and for /widgets we get response
         resp = result.__call__.request('/widget', method='POST')
         self.assertTrue(isinstance(resp, webob.exc.HTTPMovedPermanently))
         resp = result.__call__.request('/widget', method='GET')
@@ -89,7 +102,7 @@ class TestResourceFilter(tests.TestCase):
         self.assertTrue(isinstance(resp, webob.exc.HTTPMovedPermanently))
         resp = result.__call__.request('/widget', method='OPTION')
         self.assertTrue(isinstance(resp, webob.exc.HTTPMovedPermanently))
-
+        # /widgets does not have 301 hence no redirection
         resp = result.__call__.request('/widgets', method='POST')
         self.assertEqual(self.app, resp)
         resp = result.__call__.request('/widgets', method='GET')
@@ -104,6 +117,7 @@ class TestResourceFilter(tests.TestCase):
         self.assertEqual(self.app, resp)
 
     def test_add_slash_on_resource(self):
+        """Add slash should work differently, should add a slash to the end """
         result = alias.filter_factory(self.conf3)(self.app)
         resp = result.__call__.request('/widget', method='POST')
         self.assertTrue(isinstance(resp, webob.exc.HTTPMovedPermanently))
